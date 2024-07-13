@@ -1,34 +1,27 @@
-import { useEffect, useState } from "react"
+import LoginComponent from "@/src/components/LoginComponent"
+import { useState } from "react"
+import { Route, MemoryRouter as Router, Routes } from "react-router-dom"
 
-import { sendToBackground } from "@plasmohq/messaging"
+import "@/src/style.css"
 
-import LoginComponent from "~components/LoginComponent"
-
-import "~style.css"
+import Dashboard from "./components/Dashboard"
+import RegisterComponent from "./components/RegisterComponent"
 
 function IndexPopup() {
-  const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  async function getResponse() {
-    const response = await sendToBackground({
-      name: "ping"
-    })
-    console.log("test log")
-    console.log("Response:", response)
-  }
-
-  // if (loading) {
-  //   return <div>Loading...</div>
-  // }
-
   return (
-    <div className="min-h-[350px] min-w-[300px] p-5">
-      {isAuthenticated ? (
-        <div>Welcome! You are authenticated.</div>
-      ) : (
-        <LoginComponent setIsAuthenticated={setIsAuthenticated} />
-      )}
+    <div className="min-h-[500px] min-w-[400px] flex p-5 font-Inter text-base">
+      <Router>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route
+            path="/login"
+            element={<LoginComponent setIsAuthenticated={setIsAuthenticated} />}
+          />
+          <Route path="/register" element={<RegisterComponent />} />
+        </Routes>
+      </Router>
     </div>
   )
 }

@@ -4,22 +4,18 @@ import axios from "axios"
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-interface LoginComponentProps {
-  setIsAuthenticated: (isAuthenticated: boolean) => void
-}
-
 interface FormErrors {
   username?: string
   password?: string
+  confirmPassword?: string
 }
 
-const LoginComponent: React.FC<LoginComponentProps> = ({
-  setIsAuthenticated
-}) => {
+const RegisterComponent: React.FC = () => {
   const [username, setUsername] = useState<string>("")
   const [password, setPassword] = useState<string>("")
-  const [error, setError] = useState<string>("")
+  const [confirmPassword, setConfirmPassword] = useState<string>("")
   const [status, setStatus] = useState<string>("")
+  const [error, setError] = useState<string>("")
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const navigate = useNavigate()
 
@@ -27,10 +23,14 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
     const errors: FormErrors = {}
     if (!username.trim()) errors.username = "Username is required."
     if (!password.trim()) errors.password = "Password is required."
+    if (password.length < 6)
+      errors.password = "Password must be at least 6 characters."
+    if (password !== confirmPassword)
+      errors.confirmPassword = "Passwords do not match."
     return errors
   }
 
-  const handleLogin = async () => {
+  async function handleRegister() {
     const errors = validateForm()
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
@@ -39,35 +39,30 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/auth/login",
+        "http://localhost:3000/api/auth/register",
         {
-          username,
-          password
+          username: username,
+          password: password
         }
       )
-      console.log("Response:", response)
-
       if (response.status === 200) {
         setError("")
-        console.log(response.data.data)
-        setStatus("Login successful")
-        chrome.storage.sync.set({ authToken: response.data.data })
-        chrome.runtime.sendMessage({ type: "AUTH_SUCCESS" })
-        setIsAuthenticated(true)
+        setStatus("Account created successfully!")
+        navigate("/login")
       } else {
-        setError("Invalid credentials")
+        setError(response.data.message)
       }
     } catch (error: any) {
-      setError(error.response?.data?.message || "Login failed")
-      console.error(error)
+      console.log(error)
+      setError(error.response?.data?.message || "An error occurred.")
     }
   }
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full my-auto">
-      <h1 className="text-2xl font-black text-center">Welcome Back</h1>
-      <p className="text-sm font-medium text-muted-foreground">
-        Login to get back to tracking
+      <h1 className="text-2xl font-black text-center">Hey There!</h1>
+      <p className="text-sm font-medium text-muted-foreground max-w-sm text-center px-6">
+        Create an account to get started
       </p>
       {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
       {status && <p className="mt-2 text-sm text-lime-500">{status}</p>}
@@ -75,8 +70,8 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
         className="mt-4 space-y-3 w-full px-4"
         onSubmit={async (e) => {
           e.preventDefault()
-          console.log("Submitting login form")
-          await handleLogin()
+          console.log("Submitting registration form")
+          await handleRegister()
         }}>
         <Input
           placeholder="Username"
@@ -105,23 +100,38 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
           <p className="text-red-500 text-sm">{formErrors.password}</p>
         )}
 
+        <Input
+          placeholder="Confirm Password"
+          type="password"
+          value={confirmPassword}
+          className={`w-full ${formErrors.confirmPassword ? "border-red-500" : ""}`}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value)
+            setFormErrors((prev) => ({ ...prev, confirmPassword: "" }))
+          }}
+        />
+        {formErrors.confirmPassword && (
+          <p className="text-red-500 text-sm">{formErrors.confirmPassword}</p>
+        )}
+
         <Button type="submit" className="w-full">
-          Login
+          Register
         </Button>
       </form>
+
       <div className="px-4 w-full">
         <p className="text-xs font-medium text-muted-foreground my-2 text-center">
-          Don't have an account? Register here
+          Already have an account? Login here
         </p>
         <Button
-          onClick={() => navigate("/register")}
+          onClick={() => navigate("/login")}
           variant="outline"
           className="w-full">
-          Register
+          Login
         </Button>
       </div>
     </div>
   )
 }
 
-export default LoginComponent
+export default RegisterComponent
