@@ -2,7 +2,7 @@
   "name": "surf-track",
   "displayName": "Surf track",
   "version": "0.0.1",
-  "description": "A chrome extension that helps you track your screentime",
+  "description": "A chrome extension that tracks the amount of time you spend on the web",
   "author": "Akshat Dubey",
   "scripts": {
     "dev": "plasmo dev",
