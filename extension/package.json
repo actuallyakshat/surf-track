@@ -1,6 +1,6 @@
 {
-  "name": "surf-track",
-  "displayName": "Surf track",
+  "name": "extension",
+  "displayName": "Extension",
   "version": "0.0.1",
   "description": "A chrome extension that tracks the amount of time you spend on the web",
   "author": "Akshat Dubey",
@@ -10,6 +10,8 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "@plasmohq/messaging": "^0.6.2",
+    "axios": "^1.7.2",
     "plasmo": "0.88.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -28,6 +30,11 @@
   "manifest": {
     "host_permissions": [
       "https://*/*"
+    ],
+    "permissions": [
+      "storage",
+      "background",
+      "activeTab"
     ]
   }
 }
