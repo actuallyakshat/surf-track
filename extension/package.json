@@ -39,11 +39,16 @@
     "host_permissions": [
       "https://*/*"
     ],
+    "background": {
+      "service_worker": "background/index.ts",
+      "type": "module"
+    },
     "permissions": [
       "tabs",
-      "storage",
       "activeTab",
-      "windows"
+      "storage",
+      "windows",
+      "alarms"
     ]
   }
 }

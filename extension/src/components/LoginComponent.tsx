@@ -4,18 +4,15 @@ import axios from "axios"
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-interface LoginComponentProps {
-  setIsAuthenticated: (isAuthenticated: boolean) => void
-}
+import { useGlobalContext } from "../context/globalContext"
 
 interface FormErrors {
   username?: string
   password?: string
 }
 
-const LoginComponent: React.FC<LoginComponentProps> = ({
-  setIsAuthenticated
-}) => {
+const LoginComponent = () => {
+  const { setIsAuthenticated } = useGlobalContext()
   const [username, setUsername] = useState<string>("")
   const [password, setPassword] = useState<string>("")
   const [error, setError] = useState<string>("")
@@ -51,9 +48,9 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
         setError("")
         console.log(response.data.data)
         setStatus("Login successful")
-        chrome.storage.sync.set({ authToken: response.data.data })
-        chrome.runtime.sendMessage({ type: "AUTH_SUCCESS" })
+        chrome.storage.sync.set({ surfTrack_token: response.data.data })
         setIsAuthenticated(true)
+        navigate("/")
       } else {
         setError("Invalid credentials")
       }
@@ -111,7 +108,7 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
       </form>
       <div className="px-4 w-full">
         <p className="text-xs font-medium text-muted-foreground my-2 text-center">
-          Don't have an account? Register here
+          Don't have an account?
         </p>
         <Button
           onClick={() => navigate("/register")}

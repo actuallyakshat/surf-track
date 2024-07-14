@@ -121,7 +121,7 @@ const RegisterComponent: React.FC = () => {
 
       <div className="px-4 w-full">
         <p className="text-xs font-medium text-muted-foreground my-2 text-center">
-          Already have an account? Login here
+          Already have an account?
         </p>
         <Button
           onClick={() => navigate("/login")}
