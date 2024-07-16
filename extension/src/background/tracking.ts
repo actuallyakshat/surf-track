@@ -1,3 +1,5 @@
+import { formatLocalDate, getWeekNumber } from "@/lib/functions"
+
 export function handleTabChange(
   url: string,
   currentUrl: string,
@@ -22,28 +24,36 @@ export function updateScreenTime(
 ): void {
   console.log("Updating screen time for domain:", domain)
 
-  const today = new Date().toISOString().split("T")[0]
+  // Get the local date as YYYY-MM-DD format
+  const today = new Date()
+  const localDateKey = formatLocalDate(today)
 
   chrome.storage.local.get(["screenTimeData"], (result) => {
     const data = result.screenTimeData || {}
     console.log("Current screen time data before update:", data)
+    const currentWeek = getWeekNumber(today)
 
-    if (!data[today]) {
-      data[today] = {}
+    if (!data[currentWeek]) {
+      data[currentWeek] = {}
     }
 
-    if (!data[today][domain]) {
-      data[today][domain] = {
+    if (!data[currentWeek][localDateKey]) {
+      data[currentWeek][localDateKey] = {}
+    }
+
+    if (!data[currentWeek][localDateKey][domain]) {
+      data[currentWeek][localDateKey][domain] = {
         timeSpent: 0,
-        favicon: favicon || undefined
+        favicon: favicon || undefined,
+        weekNumber: currentWeek
       }
     }
 
-    if (!data[today][domain].favicon) {
-      data[today][domain].favicon = favicon || undefined
+    if (!data[currentWeek][localDateKey][domain].favicon) {
+      data[currentWeek][localDateKey][domain].favicon = favicon || undefined
     }
 
-    data[today][domain].timeSpent += timeSpent
+    data[currentWeek][localDateKey][domain].timeSpent += timeSpent
 
     console.log("Updated screen time data:", data)
     chrome.storage.local.set({ screenTimeData: data })

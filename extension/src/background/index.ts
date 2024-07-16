@@ -1,3 +1,5 @@
+import { getWeekNumber } from "@/lib/functions"
+
 import { validateTokenAndFetchData } from "./auth"
 import { syncLocalDataWithBackend } from "./sync"
 import { handleTabChange, updateScreenTime } from "./tracking"
@@ -5,12 +7,16 @@ import { handleTabChange, updateScreenTime } from "./tracking"
 let currentUrl = ""
 let startTime = 0
 let favicon = undefined
-const userId = 1 // Assuming you get the userId after validating the token
+const userId = 1
 
-const IGNORED_DOMAINS = ["newtab", "extensions", "localhost"]
+const IGNORED_DOMAINS = ["newtab", "extensions", "localhost", "settings"]
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(async () => {
   console.log("Extension installed")
+  console.log("Week of sunday: ", getWeekNumber(new Date("2024-07-14")))
+  await chrome.storage.local.get(["screenTimeData"], (result) => {
+    console.log("ScreenTimeData:", result.screenTimeData)
+  })
   validateTokenAndFetchData()
   chrome.alarms.create("syncData", { periodInMinutes: 10 })
   chrome.alarms.create("updateCurrentTabScreenTime", {
