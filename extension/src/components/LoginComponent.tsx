@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import axios from "axios"
+import { LoaderCircle } from "lucide-react"
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -18,6 +19,7 @@ const LoginComponent = () => {
   const [error, setError] = useState<string>("")
   const [status, setStatus] = useState<string>("")
   const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   const validateForm = (): FormErrors => {
@@ -72,8 +74,10 @@ const LoginComponent = () => {
         className="mt-4 space-y-3 w-full px-4"
         onSubmit={async (e) => {
           e.preventDefault()
+          setLoading(true)
           console.log("Submitting login form")
           await handleLogin()
+          setLoading(false)
         }}>
         <Input
           placeholder="Username"
@@ -102,8 +106,8 @@ const LoginComponent = () => {
           <p className="text-red-500 text-sm">{formErrors.password}</p>
         )}
 
-        <Button type="submit" className="w-full">
-          Login
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? <LoaderCircle className="animate-spin size-5" /> : "Login"}
         </Button>
       </form>
       <div className="px-4 w-full">

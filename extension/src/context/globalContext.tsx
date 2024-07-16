@@ -1,11 +1,5 @@
+import type { GlobalContextType, ScreenTimeData } from "@/types/types"
 import React, { useContext, useEffect, useState } from "react"
-
-interface GlobalContextType {
-  loading: boolean
-  setLoading: (loading: boolean) => void
-  isAuthenticated: boolean
-  setIsAuthenticated: (isAuthenticated: boolean) => void
-}
 
 const GlobalContext: React.Context<GlobalContextType> =
   React.createContext(null)
@@ -13,6 +7,9 @@ const GlobalContext: React.Context<GlobalContextType> =
 const GlobalProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [data, setData] = useState<ScreenTimeData>({})
+
+  // Check if user is authenticated (token is stored in local storage)
   useEffect(() => {
     chrome.storage.sync.get("surfTrack_token", (result) => {
       if (result.surfTrack_token) {
@@ -22,13 +19,46 @@ const GlobalProvider = ({ children }) => {
       setLoading(false)
     })
   }, [])
+
+  // Get data from local storage
+  useEffect(() => {
+    if (isAuthenticated) {
+      function getData() {
+        console.log("Getting data")
+        chrome.storage.local.get(["screenTimeData"], (result) => {
+          // Type assertion to ensure correct structure
+          const screenTimeData = (result.screenTimeData as ScreenTimeData) || {}
+          console.log("ScreenTimeData in global context:", screenTimeData)
+          setData(screenTimeData)
+        })
+      }
+      getData()
+      const interval = setInterval(getData, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [isAuthenticated])
+
+  function logoutHandler() {
+    chrome.storage.sync.remove("surfTrack_token")
+    setIsAuthenticated(false)
+  }
+
   return (
     <GlobalContext.Provider
-      value={{ loading, setLoading, isAuthenticated, setIsAuthenticated }}>
+      value={{
+        loading,
+        setLoading,
+        isAuthenticated,
+        setIsAuthenticated,
+        data,
+        setData,
+        logoutHandler
+      }}>
       {children}
     </GlobalContext.Provider>
   )
 }
+
 const useGlobalContext = () => {
   const context = useContext(GlobalContext)
   if (context === undefined) {

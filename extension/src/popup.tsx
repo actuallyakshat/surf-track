@@ -12,7 +12,7 @@ import Blocked from "./components/Blocked"
 
 function IndexPopup() {
   return (
-    <div className="min-h-[500px] min-w-[400px] relative flex font-Inter text-base">
+    <div className="h-[500px] w-[500px] relative flex font-Inter text-base noscrollbar">
       <GlobalProvider>
         <Router>
           <Routes>

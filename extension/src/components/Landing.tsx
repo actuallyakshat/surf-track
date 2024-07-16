@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 
 export default function Landing() {
   return (
-    <div className="bg-gradient-to-b from-gray-50 to-sky-50 h-full w-full px-6 flex items-center justify-center">
+    <div className="bg-gradient-to-b from-gray-50 to-sky-100 h-full w-full px-6 flex items-center justify-center">
       <div className="flex flex-col items-center justify-center">
         <h1 className="text-center font-black text-2xl">
           Surf <span className="text-sky-500">Smarter</span>, Stay{" "}

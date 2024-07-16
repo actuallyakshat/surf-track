@@ -1,20 +1,12 @@
-import { formatSeconds } from "@/lib/functions"
+import { formatSeconds, openNewTab, sortScreenTimeData } from "@/lib/functions"
+import type { DailyData, ScreenTimeData } from "@/types/types"
 import React, { useEffect, useState } from "react"
 
-interface ScreenTimeEntry {
-  favicon?: string
-  timeSpent: number
-}
-
-interface DailyData {
-  [domain: string]: ScreenTimeEntry
-}
-
-interface ScreenTimeData {
-  [date: string]: DailyData
-}
+import { useGlobalContext } from "../context/globalContext"
+import { ScreenTimeChart } from "./ScreenTimeChart"
 
 export default function ScreenTime() {
+  const { data: globalScreenTimeData } = useGlobalContext()
   const [data, setData] = useState<ScreenTimeData>({})
   const [todayData, setTodayData] = useState<DailyData>({})
 
@@ -22,26 +14,11 @@ export default function ScreenTime() {
     function getData() {
       console.log("Getting data")
       chrome.storage.local.get(["screenTimeData"], (result) => {
-        // Type assertion to ensure correct structure
-        const screenTimeData = (result.screenTimeData as ScreenTimeData) || {}
-
-        // Initialize sorted data object
-        const sortedScreenTimeData: ScreenTimeData = {}
-
-        // Process each date's data
-        for (const [date, dailyData] of Object.entries(screenTimeData)) {
-          const entries = Object.entries(dailyData)
-          const sortedEntries = entries.sort(
-            ([, a], [, b]) => b.timeSpent - a.timeSpent
-          )
-          sortedScreenTimeData[date] = Object.fromEntries(sortedEntries)
-          console.log(`Sorted data for ${date}:`, sortedScreenTimeData[date])
-        }
-        setData(sortedScreenTimeData)
+        let screenTimeData = globalScreenTimeData || {}
+        const sortedScreenTimeData = sortScreenTimeData(screenTimeData)
         console.log("Sorted ScreenTimeData:", sortedScreenTimeData)
 
-        // Update today's data
-        const today = new Date().toISOString().split("T")[0] // Get date in YYYY-MM-DD format
+        const today = new Date().toISOString().split("T")[0]
         setTodayData(sortedScreenTimeData[today] || {})
       })
     }
@@ -49,25 +26,38 @@ export default function ScreenTime() {
     getData()
     const interval = setInterval(getData, 5000)
     return () => clearInterval(interval)
-  }, [])
+  }, [globalScreenTimeData])
 
   return (
     <div className="p-4 space-y-4">
+      <ScreenTimeChart />
+      <h2 className="text-lg font-semibold">Today's Activity</h2>
       {Object.keys(todayData).length > 0 ? (
         Object.keys(todayData)
           .filter((domain) => todayData[domain].favicon)
           .map((domain) => (
-            <div key={domain} className="flex items-center">
-              <img
-                src={todayData[domain].favicon}
-                className="size-12 mr-2"
-                alt={domain}
-              />
-              {domain}: {formatSeconds(todayData[domain].timeSpent)}
+            <div key={domain} className="grid grid-cols-3 pr-6">
+              <div className="flex items-center col-span-2 gap-2">
+                <img
+                  src={todayData[domain].favicon}
+                  className="size-8 mr-2"
+                  alt={domain}
+                />
+                <button
+                  onClick={() => openNewTab(domain)}
+                  className="hover:underline">
+                  {domain}
+                </button>
+              </div>
+              <p className="col-span-1 text-right">
+                {formatSeconds(todayData[domain].timeSpent)}
+              </p>
             </div>
           ))
       ) : (
-        <div>No data for today.</div>
+        <h2 className="text-center text-muted-foreground text-sm py-2">
+          No data for today.
+        </h2>
       )}
     </div>
   )

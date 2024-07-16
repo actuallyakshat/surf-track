@@ -21,6 +21,7 @@ export function updateScreenTime(
   favicon: string | undefined
 ): void {
   console.log("Updating screen time for domain:", domain)
+
   const today = new Date().toISOString().split("T")[0]
 
   chrome.storage.local.get(["screenTimeData"], (result) => {
@@ -36,6 +37,10 @@ export function updateScreenTime(
         timeSpent: 0,
         favicon: favicon || undefined
       }
+    }
+
+    if (!data[today][domain].favicon) {
+      data[today][domain].favicon = favicon || undefined
     }
 
     data[today][domain].timeSpent += timeSpent

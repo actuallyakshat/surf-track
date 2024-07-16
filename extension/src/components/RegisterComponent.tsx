@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import axios from "axios"
+import { LoaderCircle } from "lucide-react"
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -17,6 +18,7 @@ const RegisterComponent: React.FC = () => {
   const [status, setStatus] = useState<string>("")
   const [error, setError] = useState<string>("")
   const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   const validateForm = (): FormErrors => {
@@ -36,6 +38,7 @@ const RegisterComponent: React.FC = () => {
       setFormErrors(errors)
       return
     }
+    setLoading(true)
 
     try {
       const response = await axios.post(
@@ -55,6 +58,8 @@ const RegisterComponent: React.FC = () => {
     } catch (error: any) {
       console.log(error)
       setError(error.response?.data?.message || "An error occurred.")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -114,8 +119,12 @@ const RegisterComponent: React.FC = () => {
           <p className="text-red-500 text-sm">{formErrors.confirmPassword}</p>
         )}
 
-        <Button type="submit" className="w-full">
-          Register
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? (
+            <LoaderCircle className="animate-spin size-5" />
+          ) : (
+            "Register"
+          )}
         </Button>
       </form>
 
