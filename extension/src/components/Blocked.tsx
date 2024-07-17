@@ -95,7 +95,7 @@ export default function Blocked() {
           className="mt-4"
         />
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           {filteredDomains.length > 0 ? (
             <>
               <div className="w-full flex justify-between items-center my-3">
@@ -109,7 +109,7 @@ export default function Blocked() {
                   <div className="flex items-center col-span-2">
                     <img
                       src={domain.favicon}
-                      className="size-8 mr-2"
+                      className="size-8 mr-3"
                       alt={domain.domain}
                     />
                     <button

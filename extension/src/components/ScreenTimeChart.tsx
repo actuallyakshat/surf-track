@@ -10,7 +10,12 @@ import {
   sortScreenTimeData
 } from "@/lib/functions"
 import type { ScreenTimeData } from "@/types/types"
-import { CircleChevronLeft, CircleChevronRight, TrendingUp } from "lucide-react"
+import {
+  CircleChevronLeft,
+  CircleChevronRight,
+  TrendingDown,
+  TrendingUp
+} from "lucide-react"
 import React, { useEffect, useState } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
@@ -49,19 +54,14 @@ const getStartOfWeekForYear = (weekNumber: number, year: number) => {
 }
 
 const convertToChartData = (data: ScreenTimeData, currentWeek: number) => {
-  console.log(`Converting data to chart format for weekNumber=${currentWeek}`)
-
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
   const year = new Date().getFullYear() // Use the current year or any specific year if needed
-  console.log(`Current year: ${year}`)
 
   // Calculate start of the week for the given week number
   const startOfWeek = getStartOfWeekForYear(currentWeek, year)
-  console.log("Start of week:", startOfWeek)
 
   // Retrieve data for the specified week
   const weekData = data[currentWeek] || {}
-  console.log("Week data:", weekData)
 
   // Generate chart data from weekData
   const chartData = daysOfWeek.map((day, index) => {
@@ -83,8 +83,6 @@ const convertToChartData = (data: ScreenTimeData, currentWeek: number) => {
       dateKey
     }
   })
-
-  console.log("Chart data:", chartData)
 
   return chartData
 }
@@ -114,7 +112,69 @@ export function ScreenTimeChart({
     const dataForChart = convertToChartData(screenTimeData, weekNumber)
     setChartData(dataForChart)
     console.log("Chart data set:", dataForChart)
+    getPercentageDifference()
   }, [weekNumber, globalScreenTimeData, selectedDate])
+
+  function getPercentageDifference() {
+    const currentWeek = getWeekNumber(new Date(selectedDate))
+    const previousWeek = currentWeek - 1
+    const previousWeekData = globalScreenTimeData[previousWeek] || {}
+    const currentWeekData = globalScreenTimeData[currentWeek] || {}
+
+    const previousTotalSeconds = Object.values(previousWeekData).reduce(
+      (sum, dailyData) =>
+        sum +
+        Object.values(dailyData).reduce(
+          (daySum, entry) => daySum + entry.timeSpent,
+          0
+        ),
+      0
+    )
+
+    // Calculate total seconds for the current week
+    const currentTotalSeconds = Object.values(currentWeekData).reduce(
+      (sum, dailyData) =>
+        sum +
+        Object.values(dailyData).reduce(
+          (daySum, entry) => daySum + entry.timeSpent,
+          0
+        ),
+      0
+    )
+
+    console.log("Previous total seconds:", previousTotalSeconds)
+    console.log("Current total seconds:", currentTotalSeconds)
+
+    const percentageDifference =
+      ((currentTotalSeconds - previousTotalSeconds) / previousTotalSeconds) *
+      100
+
+    if (previousTotalSeconds === 0) {
+      return "No screen time recorded for the previous week."
+    }
+
+    if (percentageDifference > 0) {
+      return (
+        <div className="flex items-center gap-2">
+          <span>
+            Your screen time was up by {percentageDifference.toFixed(2)}% this
+            week
+          </span>
+          <TrendingUp className="h-4 w-4" />
+        </div>
+      )
+    } else {
+      return (
+        <div className="flex items-center gap-2">
+          <span>
+            Your screen time was down by{" "}
+            {Math.abs(percentageDifference).toFixed(2)}% this week
+          </span>
+          <TrendingDown className="h-4 w-4" />
+        </div>
+      )
+    }
+  }
 
   return (
     <Card>
@@ -179,8 +239,8 @@ export function ScreenTimeChart({
               dataKey="screentime"
               fill="hsl(var(--chart-1))"
               radius={8}
+              className="cursor-pointer"
               onClick={(e) => {
-                console.log(`Bar clicked for dateKey: ${e.payload.dateKey}`)
                 setSelectedDay(e.payload.dateKey)
               }}
             />
@@ -189,8 +249,7 @@ export function ScreenTimeChart({
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">
-          Your screen time was up by 27% this week
-          <TrendingUp className="h-4 w-4" />
+          {getPercentageDifference()}
         </div>
       </CardFooter>
     </Card>

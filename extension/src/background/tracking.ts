@@ -49,7 +49,10 @@ export function updateScreenTime(
       }
     }
 
-    if (!data[currentWeek][localDateKey][domain].favicon) {
+    if (
+      !data[currentWeek][localDateKey][domain].favicon ||
+      data[currentWeek][localDateKey][domain].favicon != favicon
+    ) {
       data[currentWeek][localDateKey][domain].favicon = favicon || undefined
     }
 
