@@ -5,7 +5,8 @@
 [ ] Blocking certain Domains
 [ ] Refactoring
 [ ] Account Settings Options Page
-[ ] Accomodate favicon Change
+[ ] Accomodate favicon changes
+[ ] Protect Routes
 
 #### Testing TODO
 

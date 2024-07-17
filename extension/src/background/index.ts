@@ -13,14 +13,13 @@ const IGNORED_DOMAINS = ["newtab", "extensions", "localhost", "settings"]
 
 chrome.runtime.onInstalled.addListener(async () => {
   console.log("Extension installed")
-  console.log("Week of sunday: ", getWeekNumber(new Date("2024-07-14")))
   await chrome.storage.local.get(["screenTimeData"], (result) => {
     console.log("ScreenTimeData:", result.screenTimeData)
   })
   validateTokenAndFetchData()
   chrome.alarms.create("syncData", { periodInMinutes: 10 })
   chrome.alarms.create("updateCurrentTabScreenTime", {
-    periodInMinutes: 2
+    periodInMinutes: 1
   })
 })
 
@@ -36,9 +35,9 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 })
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && tab.url) {
-    console.log("Tab updated:", tab.url)
+    await isBlocked(new URL(tab.url).hostname, tabId, tab)
     updateTabInfo(tab)
   }
 })
@@ -56,8 +55,9 @@ chrome.windows.onRemoved.addListener(async (windowId) => {
 })
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
-  chrome.tabs.get(activeInfo.tabId, (tab) => {
+  chrome.tabs.get(activeInfo.tabId, async (tab) => {
     if (tab.url) {
+      await isBlocked(new URL(tab.url).hostname, activeInfo.tabId, tab)
       console.log("Tab activated:", tab.url)
       updateTabInfo(tab)
     }
@@ -79,6 +79,9 @@ function updateTabInfo(tab) {
 
   if (IGNORED_DOMAINS.some((ignored) => domain.includes(ignored))) {
     console.log(`Ignoring domain: ${domain}`)
+    // Update screen time for the previous tab
+    updateCurrentTabScreenTime()
+    resetTabInfo()
     return
   }
 
@@ -113,4 +116,31 @@ function resetTabInfo() {
   currentUrl = ""
   startTime = 0
   favicon = undefined
+}
+
+async function isBlocked(domain: string, tabId: number, tab: chrome.tabs.Tab) {
+  const blockedDomains = await chrome.storage.sync.get("blockedDomains")
+  const blockedDomainList = blockedDomains.blockedDomains || []
+  if (blockedDomainList.includes(domain)) {
+    console.log("Tab is blocked:", tab.url)
+    retryRemoveTab(tabId)
+  }
+}
+
+function retryRemoveTab(tabId, retries = 5) {
+  if (retries <= 0) {
+    console.error(`Failed to remove tab ${tabId} after multiple attempts`)
+    return
+  }
+
+  chrome.tabs.remove(tabId, () => {
+    if (chrome.runtime.lastError) {
+      console.warn(
+        `Retrying to remove tab ${tabId}: ${chrome.runtime.lastError.message}`
+      )
+      setTimeout(() => retryRemoveTab(tabId, retries - 1), 500) // Retry after 500ms
+    } else {
+      console.log(`Tab ${tabId} removed successfully`)
+    }
+  })
 }

@@ -1,4 +1,9 @@
-import { formatDate, formatSeconds, openNewTab } from "@/lib/functions"
+import {
+  formatDate,
+  formatLocalDate,
+  formatSeconds,
+  openNewTab
+} from "@/lib/functions"
 import type { DailyData } from "@/types/types"
 
 export default function DailyScreenTimeBreakdown({
@@ -11,7 +16,7 @@ export default function DailyScreenTimeBreakdown({
   return (
     <div>
       <h2 className="text-lg font-semibold">
-        {selectedDate == new Date().toISOString().split("T")[0] ? (
+        {selectedDate == formatLocalDate(new Date()) ? (
           "Today's Activity"
         ) : (
           <>{formatDate(selectedDate)} Activity</>

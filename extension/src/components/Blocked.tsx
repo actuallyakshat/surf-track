@@ -16,25 +16,26 @@ type DomainData = {
 function extractAllDomains(screenTimeData: ScreenTimeData): DomainData[] {
   const domainSet = new Set<string>()
   const domains: DomainData[] = []
-
-  for (const dailyData of Object.values(screenTimeData)) {
-    for (const [domain, data] of Object.entries(dailyData)) {
-      if (!domainSet.has(domain)) {
-        domainSet.add(domain)
-        domains.push({ domain, favicon: data.favicon })
+  for (const [week] of Object.entries(screenTimeData)) {
+    for (const [date, dailyData] of Object.entries(screenTimeData[week])) {
+      for (const [domain, data] of Object.entries(dailyData)) {
+        if (!domain) continue
+        if (!domainSet.has(domain)) {
+          domainSet.add(domain)
+          domains.push({ domain, favicon: data.favicon })
+        }
       }
     }
   }
-
   return domains
 }
 
 export default function Blocked() {
   const [searchQuery, setSearchQuery] = useState("")
   const { data } = useGlobalContext()
-  const sortedData = sortScreenTimeData(data)
+  const [blockedDomains, setBlockedDomains] = useState<string[]>([])
   const [allDomains, setAllDomains] = useState<DomainData[]>(
-    extractAllDomains(sortedData)
+    extractAllDomains(data)
   )
   const [filteredDomains, setFilteredDomains] =
     useState<DomainData[]>(allDomains)
@@ -51,8 +52,34 @@ export default function Blocked() {
   }, [searchQuery, allDomains])
 
   useEffect(() => {
-    setAllDomains(extractAllDomains(sortedData))
+    setAllDomains(extractAllDomains(data))
   }, [data])
+
+  useEffect(() => {
+    chrome.storage.sync.get("blockedDomains", (result) => {
+      setBlockedDomains(result.blockedDomains || [])
+      console.log("Blocked domains:", result.blockedDomains)
+    })
+  }, [])
+
+  async function handleBlock(domain: string, checked: boolean) {
+    const result = await chrome.storage.sync.get("blockedDomains")
+    const blockedDomains = result.blockedDomains || []
+
+    if (checked) {
+      console.log("Blocking domain:", domain)
+      const newBlockedDomains = [...blockedDomains, domain]
+      await chrome.storage.sync.set({ blockedDomains: newBlockedDomains })
+      setBlockedDomains(newBlockedDomains)
+    } else {
+      console.log("Unblocking domain:", domain)
+      const newBlockedDomains = blockedDomains.filter(
+        (blockedDomain) => blockedDomain !== domain
+      )
+      await chrome.storage.sync.set({ blockedDomains: newBlockedDomains })
+      setBlockedDomains(newBlockedDomains)
+    }
+  }
 
   return (
     <div className="w-full h-full">
@@ -67,36 +94,45 @@ export default function Blocked() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="mt-4"
         />
-        <div className="w-full flex justify-between items-center my-3">
-          <p className="font-bold text-lg">Name</p>
-          <p className="font-bold text-lg">Blocked?</p>
-        </div>
+
         <div className="space-y-2">
           {filteredDomains.length > 0 ? (
-            filteredDomains.map((domain, index) => (
-              <div
-                key={`${domain.domain}-${index}`}
-                className="grid grid-cols-3 pr-6">
-                <div className="flex items-center col-span-2">
-                  <img
-                    src={domain.favicon}
-                    className="size-8 mr-2"
-                    alt={domain.domain}
-                  />
-                  <button
-                    onClick={() => openNewTab(domain.domain)}
-                    className="hover:underline">
-                    {domain.domain}
-                  </button>
-                </div>
-                <div className="ml-auto">
-                  <Switch />
-                </div>
+            <>
+              <div className="w-full flex justify-between items-center my-3">
+                <p className="font-bold text-lg">Name</p>
+                <p className="font-bold text-lg">Blocked?</p>
               </div>
-            ))
+              {filteredDomains.map((domain, index) => (
+                <div
+                  key={`${domain.domain}-${index}`}
+                  className="grid grid-cols-3 pr-6">
+                  <div className="flex items-center col-span-2">
+                    <img
+                      src={domain.favicon}
+                      className="size-8 mr-2"
+                      alt={domain.domain}
+                    />
+                    <button
+                      onClick={() => openNewTab(domain.domain)}
+                      className="hover:underline">
+                      {domain.domain}
+                    </button>
+                  </div>
+                  <div className="ml-auto">
+                    <Switch
+                      checked={blockedDomains.includes(domain.domain)}
+                      onCheckedChange={(checked) =>
+                        handleBlock(domain.domain, checked)
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+            </>
           ) : (
-            <h2 className="text-center text-muted-foreground text-sm pt-4">
-              Surf some websites to see the websites you have visited.
+            <h2 className="text-center text-muted-foreground text-sm pt-6">
+              Don't see your website? Make sure you have visited it at least
+              once after installing the extension.
             </h2>
           )}
         </div>
