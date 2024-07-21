@@ -1,4 +1,5 @@
 import type { GlobalContextType, ScreenTimeData } from "@/types/types"
+import axios from "axios"
 import React, { useContext, useEffect, useState } from "react"
 
 const GlobalContext: React.Context<GlobalContextType> =
@@ -22,21 +23,25 @@ const GlobalProvider = ({ children }) => {
 
   // Get data from local storage
   useEffect(() => {
-    if (isAuthenticated) {
-      function getData() {
-        console.log("Getting data")
-        chrome.storage.local.get(["screenTimeData"], (result) => {
-          // Type assertion to ensure correct structure
-          const screenTimeData = (result.screenTimeData as ScreenTimeData) || {}
-          console.log("ScreenTimeData in global context:", screenTimeData)
-          setData(screenTimeData)
-        })
-      }
-      getData()
-      const interval = setInterval(getData, 5000)
-      return () => clearInterval(interval)
+    function getData() {
+      console.log("Getting data")
+      chrome.storage.local.get(["screenTimeData"], async (result) => {
+        // Type assertion to ensure correct structure
+        const screenTimeData = (result.screenTimeData as ScreenTimeData) || {}
+        if (!screenTimeData) {
+          const response = await axios.post(
+            process.env.BACKEND_URL + "/api/auth/validateToken"
+          )
+          console.log(response.data)
+        }
+        console.log("ScreenTimeData in global context:", screenTimeData)
+        setData(screenTimeData)
+      })
     }
-  }, [isAuthenticated])
+    getData()
+    const interval = setInterval(getData, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   function logoutHandler() {
     chrome.storage.sync.remove("surfTrack_token")

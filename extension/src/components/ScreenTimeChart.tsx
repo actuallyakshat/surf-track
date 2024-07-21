@@ -4,11 +4,7 @@ import {
   ChartTooltip,
   type ChartConfig
 } from "@/components/ui/chart"
-import {
-  formatSeconds,
-  getWeekNumber,
-  sortScreenTimeData
-} from "@/lib/functions"
+import { formatSeconds, getWeekNumber } from "@/lib/functions"
 import type { ScreenTimeData } from "@/types/types"
 import {
   CircleChevronLeft,

@@ -11,6 +11,9 @@ export function handleTabChange(
     console.log("Previous URL:", currentUrl)
     const endTime = Date.now()
     const timeSpent = Math.round((endTime - startTime) / 1000)
+    if (timeSpent < 5) {
+      return
+    }
     updateScreenTime(new URL(currentUrl).hostname, timeSpent, favicon)
   }
 
@@ -28,7 +31,7 @@ export function updateScreenTime(
   const today = new Date()
   const localDateKey = formatLocalDate(today)
 
-  chrome.storage.local.get(["screenTimeData"], (result) => {
+  chrome.storage.sync.get(["screenTimeData"], (result) => {
     const data = result.screenTimeData || {}
     console.log("Current screen time data before update:", data)
     const currentWeek = getWeekNumber(today)
@@ -59,6 +62,6 @@ export function updateScreenTime(
     data[currentWeek][localDateKey][domain].timeSpent += timeSpent
 
     console.log("Updated screen time data:", data)
-    chrome.storage.local.set({ screenTimeData: data })
+    chrome.storage.sync.set({ screenTimeData: data })
   })
 }

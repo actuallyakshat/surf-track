@@ -7,17 +7,25 @@ import { handleTabChange, updateScreenTime } from "./tracking"
 let currentUrl = ""
 let startTime = 0
 let favicon = undefined
-const userId = 1
+let userId
 
 const IGNORED_DOMAINS = ["newtab", "extensions", "localhost", "settings"]
 
 chrome.runtime.onInstalled.addListener(async () => {
   console.log("Extension installed")
-  await chrome.storage.local.get(["screenTimeData"], (result) => {
+  await chrome.storage.sync.get(["screenTimeData"], (result) => {
     console.log("ScreenTimeData:", result.screenTimeData)
   })
-  validateTokenAndFetchData()
-  chrome.alarms.create("syncData", { periodInMinutes: 10 })
+  // const response = await validateTokenAndFetchData()
+  // if (response.status === 200) {
+  //   userId = response.data.data.id
+  //   console.log("User ID:", userId)
+  // } else {
+  //   chrome.storage.sync.set({
+  //     surfTrack_token: undefined
+  //   })
+  // }
+  chrome.alarms.create("syncData  ", { periodInMinutes: 10 })
   chrome.alarms.create("updateCurrentTabScreenTime", {
     periodInMinutes: 1
   })

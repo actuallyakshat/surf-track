@@ -6,6 +6,7 @@ import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { useGlobalContext } from "../context/globalContext"
+import TopBar from "./TopBar"
 
 interface FormErrors {
   username?: string
@@ -63,63 +64,70 @@ const LoginComponent = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full my-auto">
-      <h1 className="text-2xl font-black text-center">Welcome Back</h1>
-      <p className="text-sm font-medium text-muted-foreground">
-        Login to get back to tracking
-      </p>
-      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
-      {status && <p className="mt-2 text-sm text-lime-500">{status}</p>}
-      <form
-        className="mt-4 space-y-3 w-full px-4"
-        onSubmit={async (e) => {
-          e.preventDefault()
-          setLoading(true)
-          console.log("Submitting login form")
-          await handleLogin()
-          setLoading(false)
-        }}>
-        <Input
-          placeholder="Username"
-          value={username}
-          className={`w-full ${formErrors.username ? "border-red-500" : ""}`}
-          onChange={(e) => {
-            setUsername(e.target.value)
-            setFormErrors((prev) => ({ ...prev, username: "" }))
-          }}
-        />
-        {formErrors.username && (
-          <p className="text-red-500 text-sm">{formErrors.username}</p>
-        )}
-
-        <Input
-          placeholder="Password"
-          type="password"
-          value={password}
-          className={`w-full ${formErrors.password ? "border-red-500" : ""}`}
-          onChange={(e) => {
-            setPassword(e.target.value)
-            setFormErrors((prev) => ({ ...prev, password: "" }))
-          }}
-        />
-        {formErrors.password && (
-          <p className="text-red-500 text-sm">{formErrors.password}</p>
-        )}
-
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? <LoaderCircle className="animate-spin size-5" /> : "Login"}
-        </Button>
-      </form>
-      <div className="px-4 w-full">
-        <p className="text-xs font-medium text-muted-foreground my-2 text-center">
-          Don't have an account?
+    <div className="flex flex-col items-center h-full w-full my-auto">
+      <TopBar />
+      <div className="my-auto flex flex-col items-center justify-center w-full">
+        <h1 className="text-2xl font-black text-center">Welcome Back</h1>
+        <p className="text-sm font-medium text-muted-foreground">
+          Login to synchronise your data across devices
         </p>
-        <Button
-          onClick={() => navigate("/register")}
-          variant="outline"
-          className="w-full">
-          Register
-        </Button>
+        {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+        {status && <p className="mt-2 text-sm text-lime-500">{status}</p>}
+        <form
+          className="pt-4 space-y-3 w-full px-4"
+          onSubmit={async (e) => {
+            e.preventDefault()
+            setLoading(true)
+            console.log("Submitting login form")
+            await handleLogin()
+            setLoading(false)
+          }}>
+          <Input
+            placeholder="Username"
+            value={username}
+            className={`w-full ${formErrors.username ? "border-red-500" : ""}`}
+            onChange={(e) => {
+              setUsername(e.target.value)
+              setFormErrors((prev) => ({ ...prev, username: "" }))
+            }}
+          />
+          {formErrors.username && (
+            <p className="text-red-500 text-sm">{formErrors.username}</p>
+          )}
+
+          <Input
+            placeholder="Password"
+            type="password"
+            value={password}
+            className={`w-full ${formErrors.password ? "border-red-500" : ""}`}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              setFormErrors((prev) => ({ ...prev, password: "" }))
+            }}
+          />
+          {formErrors.password && (
+            <p className="text-red-500 text-sm">{formErrors.password}</p>
+          )}
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? (
+              <LoaderCircle className="animate-spin size-5" />
+            ) : (
+              "Login"
+            )}
+          </Button>
+        </form>
+        <div className="px-4 w-full">
+          <p className="text-xs font-medium text-muted-foreground my-2 text-center">
+            Don't have an account?
+          </p>
+          <Button
+            onClick={() => navigate("/register")}
+            variant="outline"
+            className="w-full">
+            Register
+          </Button>
+        </div>
       </div>
     </div>
   )

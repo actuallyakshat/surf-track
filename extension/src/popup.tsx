@@ -12,14 +12,14 @@ import Blocked from "./components/Blocked"
 
 function IndexPopup() {
   return (
-    <div className="h-[500px] w-[500px] relative flex font-Inter text-base noscrollbar">
+    <div className="h-[600px] w-[500px] relative flex font-Inter text-base noscrollbar">
       <GlobalProvider>
         <Router>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/blocked" element={<Blocked />} />
             <Route path="/login" element={<LoginComponent />} />
             <Route path="/register" element={<RegisterComponent />} />
-            <Route path="/blocked" element={<Blocked />} />
           </Routes>
         </Router>
       </GlobalProvider>

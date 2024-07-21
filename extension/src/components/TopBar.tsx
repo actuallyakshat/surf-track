@@ -16,7 +16,7 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip"
 import { useGlobalContext } from "@/src/context/globalContext"
-import { BanIcon, Home, LogOut } from "lucide-react"
+import { BanIcon, Home, LogIn, LogOut } from "lucide-react"
 import React, { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 
@@ -26,8 +26,8 @@ export default function TopBar() {
   const [open, setOpen] = useState(false)
 
   return (
-    <TooltipProvider delayDuration={200}>
-      <div className="h-12 border-b w-full dark bg-background px-4 flex items-center justify-between text-white">
+    <div className="min-h-12 border-b w-full dark bg-background px-4 flex items-center justify-between text-white">
+      <TooltipProvider delayDuration={200}>
         <Tooltip>
           <TooltipTrigger>
             <Link to="/">
@@ -91,13 +91,36 @@ export default function TopBar() {
             </AlertDialog>
           </div>
         ) : (
-          <Link
-            to={"/login"}
-            className="flex items-center gap-2 text-sm hover:underline font-medium">
-            Login
-          </Link>
+          <div className="flex items-center gap-4">
+            <Tooltip>
+              <TooltipTrigger>
+                <Link
+                  to={"/blocked"}
+                  className="flex items-center gap-2 text-sm hover:underline font-medium">
+                  <BanIcon
+                    className={`${pathname === "/blocked" ? "text-white" : "text-muted-foreground"} size-5`}
+                  />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Blocked Websites</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                <Link
+                  to={"/login"}
+                  className="flex items-center gap-2 text-sm hover:underline font-medium">
+                  <LogIn className="size-5 stroke-muted-foreground hover:stroke-white transition-colors" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Log in</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         )}
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+    </div>
   )
 }
