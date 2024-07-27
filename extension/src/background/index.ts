@@ -1,45 +1,42 @@
 import { getWeekNumber } from "@/lib/functions"
 
-import { validateTokenAndFetchData } from "./auth"
-import { syncLocalDataWithBackend } from "./sync"
+import "./sync"
+
+import { syncPreviousDataWithBackend } from "./sync"
 import { handleTabChange, updateScreenTime } from "./tracking"
 
 let currentUrl = ""
 let startTime = 0
 let favicon = undefined
 let userId
+let isWindowFocused = true
 
 const IGNORED_DOMAINS = ["newtab", "extensions", "localhost", "settings"]
 
 chrome.runtime.onInstalled.addListener(async () => {
   console.log("Extension installed")
-  await chrome.storage.sync.get(["screenTimeData"], (result) => {
+  await chrome.storage.local.get(["screenTimeData"], (result) => {
     console.log("ScreenTimeData:", result.screenTimeData)
   })
-  // const response = await validateTokenAndFetchData()
-  // if (response.status === 200) {
-  //   userId = response.data.data.id
-  //   console.log("User ID:", userId)
-  // } else {
-  //   chrome.storage.sync.set({
-  //     surfTrack_token: undefined
-  //   })
-  // }
-  chrome.alarms.create("syncData  ", { periodInMinutes: 10 })
-  chrome.alarms.create("updateCurrentTabScreenTime", {
-    periodInMinutes: 1
-  })
+
+  chrome.alarms.create("syncData", { periodInMinutes: 10 })
+  chrome.alarms.create("updateCurrentTabScreenTime", { periodInMinutes: 1 })
 })
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === "syncData") {
-    console.log("Alarm triggered: syncData")
-    syncLocalDataWithBackend(userId)
+    await chrome.storage.local.get(["screenTimeData"], async (data) => {
+      if (data.screenTimeData) {
+        const currentWeekNumber = getWeekNumber(new Date())
+        if (data[currentWeekNumber].synced === false) {
+          console.log("Alarm triggered: syncData")
+          console.log("Syncing data")
+          await syncPreviousDataWithBackend(currentWeekNumber, data)
+        }
+      }
+    })
   } else if (alarm.name === "updateCurrentTabScreenTime") {
-    if (currentUrl && startTime > Date.now() - 1000 * 60 * 2) {
-      updateCurrentTabScreenTime()
-      startTime = Date.now()
-    }
+    updateCurrentTabScreenTime()
   }
 })
 
@@ -50,16 +47,20 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 })
 
-chrome.windows.onRemoved.addListener(async (windowId) => {
-  chrome.windows.getAll((windows) => {
-    if (windows.length === 0 && currentUrl) {
-      console.log("All browser windows closed")
-      const endTime = Date.now()
-      const timeSpent = Math.round((endTime - startTime) / 1000)
-      updateScreenTime(new URL(currentUrl).hostname, timeSpent, favicon)
-      resetTabInfo()
-    }
-  })
+chrome.windows.onFocusChanged.addListener((windowId) => {
+  if (windowId === chrome.windows.WINDOW_ID_NONE) {
+    // Window lost focus
+    isWindowFocused = false
+    updateCurrentTabScreenTime()
+  } else {
+    // Window gained focus
+    isWindowFocused = true
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        updateTabInfo(tabs[0])
+      }
+    })
+  }
 })
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
@@ -78,6 +79,7 @@ function updateCurrentTabScreenTime() {
     const endTime = Date.now()
     const timeSpent = Math.round((endTime - startTime) / 1000)
     updateScreenTime(new URL(currentUrl).hostname, timeSpent, favicon)
+    startTime = endTime // Reset start time to current time
   }
 }
 
@@ -87,19 +89,17 @@ function updateTabInfo(tab) {
 
   if (IGNORED_DOMAINS.some((ignored) => domain.includes(ignored))) {
     console.log(`Ignoring domain: ${domain}`)
-    // Update screen time for the previous tab
     updateCurrentTabScreenTime()
     resetTabInfo()
     return
   }
 
   const result = handleTabChange(tab.url, currentUrl, startTime, favicon)
-  currentUrl = result.currentUrl
-  startTime = result.startTime
+  currentUrl = result?.currentUrl
+  startTime = result?.startTime
 
-  // Retry mechanism for favicon
   if (!tab.favIconUrl) {
-    retryFetchFavicon(tab.id, 5) // Retry up to 5 times
+    retryFetchFavicon(tab.id, 5)
   } else {
     console.log("Tab favicon:", tab.favIconUrl)
     favicon = tab.favIconUrl
@@ -126,9 +126,11 @@ function resetTabInfo() {
   favicon = undefined
 }
 
-async function isBlocked(domain: string, tabId: number, tab: chrome.tabs.Tab) {
-  const blockedDomains = await chrome.storage.sync.get("blockedDomains")
+async function isBlocked(domain, tabId, tab) {
+  const blockedDomains = await chrome.storage.local.get("blockedDomains")
+  console.log("Blocked domains:", blockedDomains)
   const blockedDomainList = blockedDomains.blockedDomains || []
+  console.log("Blocked domains List:", blockedDomainList)
   if (blockedDomainList.includes(domain)) {
     console.log("Tab is blocked:", tab.url)
     retryRemoveTab(tabId)

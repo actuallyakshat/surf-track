@@ -52,7 +52,8 @@
       "activeTab",
       "storage",
       "windows",
-      "alarms"
+      "alarms",
+      "unlimitedStorage"
     ]
   }
 }

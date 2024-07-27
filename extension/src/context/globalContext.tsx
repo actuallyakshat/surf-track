@@ -12,7 +12,7 @@ const GlobalProvider = ({ children }) => {
 
   // Check if user is authenticated (token is stored in local storage)
   useEffect(() => {
-    chrome.storage.sync.get("surfTrack_token", (result) => {
+    chrome.storage.local.get("surfTrack_token", (result) => {
       if (result.surfTrack_token) {
         console.log("Token:", result.surfTrack_token)
         setIsAuthenticated(true)
@@ -23,19 +23,11 @@ const GlobalProvider = ({ children }) => {
 
   // Get data from local storage
   useEffect(() => {
-    function getData() {
+    async function getData() {
       console.log("Getting data")
-      chrome.storage.local.get(["screenTimeData"], async (result) => {
-        // Type assertion to ensure correct structure
-        const screenTimeData = (result.screenTimeData as ScreenTimeData) || {}
-        if (!screenTimeData) {
-          const response = await axios.post(
-            process.env.BACKEND_URL + "/api/auth/validateToken"
-          )
-          console.log(response.data)
-        }
-        console.log("ScreenTimeData in global context:", screenTimeData)
-        setData(screenTimeData)
+      await chrome.storage.local.get(["screenTimeData"], (result) => {
+        console.log("ScreenTimeData:", result.screenTimeData)
+        setData(result.screenTimeData)
       })
     }
     getData()
@@ -44,7 +36,7 @@ const GlobalProvider = ({ children }) => {
   }, [])
 
   function logoutHandler() {
-    chrome.storage.sync.remove("surfTrack_token")
+    chrome.storage.local.remove("surfTrack_token")
     setIsAuthenticated(false)
   }
 

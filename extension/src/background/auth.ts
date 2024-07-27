@@ -2,7 +2,7 @@ import axios from "axios"
 
 const BACKEND_URL = process.env.BACKEND_URL
 export async function validateTokenAndFetchData() {
-  const token = await chrome.storage.sync.get("surfTrack_token")
+  const token = await chrome.storage.local.get("surfTrack_token")
   if (!token.surfTrack_token) {
     console.log("No token found")
   }

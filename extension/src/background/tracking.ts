@@ -31,7 +31,7 @@ export function updateScreenTime(
   const today = new Date()
   const localDateKey = formatLocalDate(today)
 
-  chrome.storage.sync.get(["screenTimeData"], (result) => {
+  chrome.storage.local.get(["screenTimeData"], (result) => {
     const data = result.screenTimeData || {}
     console.log("Current screen time data before update:", data)
     const currentWeek = getWeekNumber(today)
@@ -62,6 +62,6 @@ export function updateScreenTime(
     data[currentWeek][localDateKey][domain].timeSpent += timeSpent
 
     console.log("Updated screen time data:", data)
-    chrome.storage.sync.set({ screenTimeData: data })
+    chrome.storage.local.set({ screenTimeData: data })
   })
 }

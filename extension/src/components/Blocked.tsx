@@ -3,7 +3,6 @@ import { Switch } from "@/components/ui/switch"
 import { formatSeconds, openNewTab, sortScreenTimeData } from "@/lib/functions"
 import type { ScreenTimeData } from "@/types/types"
 import React, { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
 
 import { useGlobalContext } from "../context/globalContext"
 import TopBar from "./TopBar"
@@ -56,27 +55,28 @@ export default function Blocked() {
   }, [data])
 
   useEffect(() => {
-    chrome.storage.sync.get("blockedDomains", (result) => {
+    chrome.storage.local.get("blockedDomains", (result) => {
       setBlockedDomains(result.blockedDomains || [])
       console.log("Blocked domains:", result.blockedDomains)
     })
   }, [])
 
   async function handleBlock(domain: string, checked: boolean) {
-    const result = await chrome.storage.sync.get("blockedDomains")
+    const result = await chrome.storage.local.get("blockedDomains")
     const blockedDomains = result.blockedDomains || []
 
     if (checked) {
       console.log("Blocking domain:", domain)
       const newBlockedDomains = [...blockedDomains, domain]
-      await chrome.storage.sync.set({ blockedDomains: newBlockedDomains })
+      await chrome.storage.local.set({ blockedDomains: newBlockedDomains })
       setBlockedDomains(newBlockedDomains)
     } else {
       console.log("Unblocking domain:", domain)
       const newBlockedDomains = blockedDomains.filter(
         (blockedDomain) => blockedDomain !== domain
       )
-      await chrome.storage.sync.set({ blockedDomains: newBlockedDomains })
+      console.log("New blocked domains:", newBlockedDomains)
+      await chrome.storage.local.set({ blockedDomains: newBlockedDomains })
       setBlockedDomains(newBlockedDomains)
     }
   }

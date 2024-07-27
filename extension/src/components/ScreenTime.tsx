@@ -12,8 +12,8 @@ import DailyScreenTimeBreakdown from "./DailyScreenTimeBreakdown"
 import { ScreenTimeChart } from "./ScreenTimeChart"
 
 export default function ScreenTime() {
-  const { data: globalScreenTimeData } = useGlobalContext()
-  const [dailyBreakdown, setDailyBreakdown] = useState<DailyData>({})
+  const { data: globalScreenTimeData = {} } = useGlobalContext()
+  const [dailyBreakdown, setDailyBreakdown] = useState<DailyData | {}>({})
   const [selectedDate, setSelectedDate] = useState(formatLocalDate(new Date()))
 
   useEffect(() => {
@@ -23,6 +23,7 @@ export default function ScreenTime() {
       const dayData =
         globalScreenTimeData[weekOfSelectedDate]?.[selectedDate] || {}
       const sortedDayData = sortScreenTimeDataForDate(dayData)
+      console.log("🚀 ~ getData ~ sortedDayData:", sortedDayData)
       setDailyBreakdown(sortedDayData)
     }
 

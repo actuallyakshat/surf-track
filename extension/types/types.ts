@@ -17,7 +17,10 @@ export interface ScreenTimeEntry {
 
 // Define the interface for daily data
 export interface DailyData {
-  [domain: string]: ScreenTimeEntry
+  synced?: boolean
+  domains: {
+    [domain: string]: ScreenTimeEntry
+  }
 }
 
 // Define the interface for the weekly data

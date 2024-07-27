@@ -51,7 +51,7 @@ const LoginComponent = () => {
         setError("")
         console.log(response.data.data)
         setStatus("Login successful")
-        chrome.storage.sync.set({ surfTrack_token: response.data.data })
+        chrome.storage.local.set({ surfTrack_token: response.data.data })
         setIsAuthenticated(true)
         navigate("/")
       } else {
