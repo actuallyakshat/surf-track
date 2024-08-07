@@ -18,8 +18,11 @@ function IndexPopup() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/blocked" element={<Blocked />} />
-            <Route path="/login" element={<LoginComponent />} />
-            <Route path="/register" element={<RegisterComponent />} />
+
+            {/* Enable when you implement DB Sync */}
+
+            {/* <Route path="/login" element={<LoginComponent />} />
+            <Route path="/register" element={<RegisterComponent />} /> */}
           </Routes>
         </Router>
       </GlobalProvider>

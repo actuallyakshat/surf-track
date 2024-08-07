@@ -40,23 +40,24 @@ export default function TopBar() {
             <p>Dashboard</p>
           </TooltipContent>
         </Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <Link
+              to={"/blocked"}
+              className="flex items-center gap-2 text-sm hover:underline font-medium">
+              <BanIcon
+                className={`${pathname === "/blocked" ? "text-white" : "text-muted-foreground"} size-5`}
+              />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Blocked Websites</p>
+          </TooltipContent>
+        </Tooltip>
 
-        {isAuthenticated ? (
+        {/* {isAuthenticated ? (
           <div className="flex items-center gap-4">
-            <Tooltip>
-              <TooltipTrigger>
-                <Link
-                  to={"/blocked"}
-                  className="flex items-center gap-2 text-sm hover:underline font-medium">
-                  <BanIcon
-                    className={`${pathname === "/blocked" ? "text-white" : "text-muted-foreground"} size-5`}
-                  />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Blocked Websites</p>
-              </TooltipContent>
-            </Tooltip>
+            
             <AlertDialog open={open} onOpenChange={setOpen}>
               <AlertDialogTrigger asChild>
                 <Tooltip>
@@ -119,7 +120,7 @@ export default function TopBar() {
               </TooltipContent>
             </Tooltip>
           </div>
-        )}
+        )} */}
       </TooltipProvider>
     </div>
   )

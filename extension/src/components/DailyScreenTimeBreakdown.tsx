@@ -36,7 +36,7 @@ export default function DailyScreenTimeBreakdown({
                   />
                   <button
                     onClick={() => openNewTab(domain)}
-                    className="hover:underline">
+                    className="hover:underline whitespace-nowrap">
                     {domain}
                   </button>
                 </div>

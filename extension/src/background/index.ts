@@ -8,7 +8,7 @@ import { handleTabChange, updateScreenTime } from "./tracking"
 let currentUrl = ""
 let startTime = 0
 let favicon = undefined
-let userId
+// let userId
 let isWindowFocused = true
 
 const IGNORED_DOMAINS = ["newtab", "extensions", "localhost", "settings"]

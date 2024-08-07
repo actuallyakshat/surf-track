@@ -26,6 +26,7 @@ function extractAllDomains(screenTimeData: ScreenTimeData): DomainData[] {
       }
     }
   }
+  domains.sort((a, b) => a.domain.localeCompare(b.domain))
   return domains
 }
 
@@ -103,30 +104,34 @@ export default function Blocked() {
                 <p className="font-bold text-lg">Blocked?</p>
               </div>
               {filteredDomains.map((domain, index) => (
-                <div
-                  key={`${domain.domain}-${index}`}
-                  className="grid grid-cols-3 pr-6">
-                  <div className="flex items-center col-span-2">
-                    <img
-                      src={domain.favicon}
-                      className="size-8 mr-3"
-                      alt={domain.domain}
-                    />
-                    <button
-                      onClick={() => openNewTab(domain.domain)}
-                      className="hover:underline">
-                      {domain.domain}
-                    </button>
-                  </div>
-                  <div className="ml-auto">
-                    <Switch
-                      checked={blockedDomains.includes(domain.domain)}
-                      onCheckedChange={(checked) =>
-                        handleBlock(domain.domain, checked)
-                      }
-                    />
-                  </div>
-                </div>
+                <>
+                  {domain.favicon && (
+                    <div
+                      key={`${domain.domain}-${index}`}
+                      className="grid grid-cols-3 pr-6">
+                      <div className="flex items-center col-span-2">
+                        <img
+                          src={domain.favicon}
+                          className="size-8 mr-3"
+                          alt={domain.domain}
+                        />
+                        <button
+                          onClick={() => openNewTab(domain.domain)}
+                          className="hover:underline whitespace-nowrap">
+                          {domain.domain}
+                        </button>
+                      </div>
+                      <div className="ml-auto">
+                        <Switch
+                          checked={blockedDomains.includes(domain.domain)}
+                          onCheckedChange={(checked) =>
+                            handleBlock(domain.domain, checked)
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
               ))}
             </>
           ) : (
