@@ -65,8 +65,6 @@ const convertToChartData = (data: ScreenTimeData, currentWeek: number) => {
 
     const screentime = totalSeconds / 60 // Convert seconds to minutes
 
-    console.log(`Date: ${dateKey}, Total Seconds: ${totalSeconds}`)
-
     return {
       day,
       screentime, // Convert seconds to minutes
@@ -76,6 +74,7 @@ const convertToChartData = (data: ScreenTimeData, currentWeek: number) => {
 
   return chartData
 }
+
 export function ScreenTimeChart({
   selectedDate,
   setSelectedDay
@@ -90,73 +89,136 @@ export function ScreenTimeChart({
     getWeekNumber(new Date(selectedDate))
   )
   const { data: globalScreenTimeData } = useGlobalContext()
+  const [averageScreenTime, setAverageScreenTime] = useState<string>("")
 
   useEffect(() => {
-    console.log("Global screen time data:", globalScreenTimeData)
     const screenTimeData: ScreenTimeData = globalScreenTimeData || {}
-    console.log("Screen time data:", screenTimeData)
     const dataForChart = convertToChartData(screenTimeData, weekNumber)
-    console.log("Data for chart:", dataForChart)
     setChartData(dataForChart)
-    getPercentageDifference()
+    // getPercentageDifference()
+    getAverageScreenTimeForWeek(globalScreenTimeData, weekNumber)
   }, [weekNumber, globalScreenTimeData, selectedDate])
 
-  function getPercentageDifference() {
-    const currentWeek = getWeekNumber(new Date(selectedDate))
-    const previousWeek = currentWeek - 1
-    const previousWeekData = globalScreenTimeData[previousWeek] || {}
-    const currentWeekData = globalScreenTimeData[currentWeek] || {}
+  // function getPercentageDifference() {
+  //   const currentWeek = getWeekNumber(new Date(selectedDate))
+  //   const previousWeek = currentWeek - 1
+  //   const previousWeekData = globalScreenTimeData[previousWeek] || {}
+  //   const currentWeekData = globalScreenTimeData[currentWeek] || {}
 
-    const previousTotalSeconds = Object.values(previousWeekData).reduce(
-      (sum, dailyData) =>
-        sum +
-        Object.values(dailyData).reduce(
-          (daySum, entry) => daySum + entry.timeSpent,
-          0
-        ),
-      0
-    )
+  //   const previousTotalSeconds = Object.values(previousWeekData).reduce(
+  //     (sum, dailyData) =>
+  //       sum +
+  //       Object.values(dailyData).reduce(
+  //         (daySum, entry) => daySum + entry.timeSpent,
+  //         0
+  //       ),
+  //     0
+  //   )
 
-    // Calculate total seconds for the current week
-    const currentTotalSeconds = Object.values(currentWeekData).reduce(
-      (sum, dailyData) =>
-        sum +
-        Object.values(dailyData).reduce(
-          (daySum, entry) => daySum + entry.timeSpent,
-          0
-        ),
-      0
-    )
+  //   // Calculate total seconds for the current week
+  //   const currentTotalSeconds = Object.values(currentWeekData).reduce(
+  //     (sum, dailyData) =>
+  //       sum +
+  //       Object.values(dailyData).reduce(
+  //         (daySum, entry) => daySum + entry.timeSpent,
+  //         0
+  //       ),
+  //     0
+  //   )
 
-    const percentageDifference =
-      ((currentTotalSeconds - previousTotalSeconds) / previousTotalSeconds) *
-      100
+  //   const percentageDifference =
+  //     ((currentTotalSeconds - previousTotalSeconds) / previousTotalSeconds) *
+  //     100
 
-    if (previousTotalSeconds === 0) {
-      return "No screen time recorded for the previous week."
+  //   if (previousTotalSeconds === 0) {
+  //     return "No screen time recorded for the previous week."
+  //   }
+
+  //   if (percentageDifference > 0) {
+  //     return (
+  //       <div className="flex items-center gap-2">
+  //         <span>
+  //           Your screen time is up by {percentageDifference.toFixed(2)}% this
+  //           week
+  //         </span>
+  //         <TrendingUp className="h-4 w-4" />
+  //       </div>
+  //     )
+  //   } else {
+  //     return (
+  //       <div className="flex items-center gap-2">
+  //         <span>
+  //           Your screen time is down by{" "}
+  //           {Math.abs(percentageDifference).toFixed(2)}% this week
+  //         </span>
+  //         <TrendingDown className="h-4 w-4" />
+  //       </div>
+  //     )
+  //   }
+  // }
+
+  function getAverageScreenTimeForWeek(
+    globalScreenTimeData: ScreenTimeData,
+    weekNumber: number
+  ) {
+    const currentWeek = getWeekNumber(new Date())
+    const currentYear = new Date().getFullYear()
+    const weekData = globalScreenTimeData[weekNumber] || {}
+
+    // Get the number of days with data in the given week
+    const daysWithData = Object.keys(weekData)
+
+    console.log("weekData:", weekData)
+    console.log("daysWithData:", daysWithData)
+
+    if (daysWithData.length === 0) {
+      setAverageScreenTime("")
+      return
     }
 
-    if (percentageDifference > 0) {
+    // Calculate the total screen time for the given week
+    const totalSeconds = daysWithData.reduce((sum, dateKey) => {
+      console.log("dateKey:", dateKey)
+      const dailyData = weekData[dateKey]
+      console.log("dailyData:", dailyData)
+
+      // Add the time spent on each website for the day
       return (
-        <div className="flex items-center gap-2">
-          <span>
-            Your screen time was up by {percentageDifference.toFixed(2)}% this
-            week
-          </span>
-          <TrendingUp className="h-4 w-4" />
-        </div>
+        sum +
+        Object.values(dailyData).reduce((daySum, entry) => {
+          console.log("entry:", entry)
+          return daySum + entry.timeSpent
+        }, 0)
+      )
+    }, 0)
+
+    // Calculate the average screen time in seconds
+    const averageSeconds = totalSeconds / daysWithData.length
+
+    // Convert average seconds to hours and minutes
+    const hours = Math.floor(averageSeconds / 3600)
+    const minutes = Math.floor((averageSeconds % 3600) / 60)
+
+    console.log("totalSeconds:", totalSeconds)
+    console.log("averageSeconds:", averageSeconds)
+    console.log("hours:", hours)
+    console.log("minutes:", minutes)
+
+    if (currentWeek !== weekNumber) {
+      setAverageScreenTime(
+        `You averaged ${hours}h ${minutes}m in week ${weekNumber} of year ${currentYear}`
       )
     } else {
-      return (
-        <div className="flex items-center gap-2">
-          <span>
-            Your screen time was down by{" "}
-            {Math.abs(percentageDifference).toFixed(2)}% this week
-          </span>
-          <TrendingDown className="h-4 w-4" />
-        </div>
+      setAverageScreenTime(
+        `You have averaged ${hours}h ${minutes}m upto now this week`
       )
     }
+  }
+
+  function previousWeekExists() {
+    const previousWeekNumber = weekNumber - 1
+    const hasPreviousWeekData = !!globalScreenTimeData[previousWeekNumber]
+    return hasPreviousWeekData
   }
 
   return (
@@ -169,23 +231,29 @@ export function ScreenTimeChart({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button>
-            <CircleChevronLeft
-              className="size-5"
-              onClick={() => {
+          <button
+            className="disabled:cursor-not-allowed"
+            disabled={!previousWeekExists()}
+            onClick={() => {
+              const hasPreviousWeekData = previousWeekExists()
+
+              if (hasPreviousWeekData) {
                 setWeekNumber(weekNumber - 1)
-              }}
-            />
+              } else {
+                console.log("No data available for the previous week")
+              }
+            }}>
+            <CircleChevronLeft className="size-5" />
           </button>
-          <button disabled={weekNumber >= getWeekNumber(new Date())}>
-            <CircleChevronRight
-              className="size-5"
-              onClick={() => {
-                if (weekNumber < getWeekNumber(new Date())) {
-                  setWeekNumber(weekNumber + 1)
-                }
-              }}
-            />
+          <button
+            className="disabled:cursor-not-allowed"
+            disabled={weekNumber >= getWeekNumber(new Date())}
+            onClick={() => {
+              if (weekNumber < getWeekNumber(new Date())) {
+                setWeekNumber(weekNumber + 1)
+              }
+            }}>
+            <CircleChevronRight className="size-5" />
           </button>
         </div>
       </div>
@@ -204,9 +272,6 @@ export function ScreenTimeChart({
               content={({ payload }) => {
                 if (payload && payload.length > 0) {
                   const { value } = payload[0]
-                  console.log(
-                    `Tooltip content value: ${(value as number) * 60}`
-                  )
                   return (
                     <span className="py-1 px-4 rounded-lg border shadow-md bg-background">
                       Duration: {formatSeconds((value as number) * 60)}
@@ -229,9 +294,12 @@ export function ScreenTimeChart({
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 font-medium leading-none">
-          {getPercentageDifference()}
-        </div>
+        {averageScreenTime && (
+          <div className="flex gap-2 font-medium leading-none">
+            {/* {getPercentageDifference()} */}
+            {averageScreenTime}
+          </div>
+        )}
       </CardFooter>
     </Card>
   )

@@ -45,7 +45,6 @@ const LoginComponent = () => {
           password
         }
       )
-      console.log("Response:", response)
 
       if (response.status === 200) {
         setError("")
@@ -78,7 +77,6 @@ const LoginComponent = () => {
           onSubmit={async (e) => {
             e.preventDefault()
             setLoading(true)
-            console.log("Submitting login form")
             await handleLogin()
             setLoading(false)
           }}>

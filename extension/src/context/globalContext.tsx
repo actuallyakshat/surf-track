@@ -13,7 +13,6 @@ const GlobalProvider = ({ children }) => {
   useEffect(() => {
     chrome.storage.local.get("surfTrack_token", (result) => {
       if (result.surfTrack_token) {
-        console.log("Token:", result.surfTrack_token)
         setIsAuthenticated(true)
       }
       setLoading(false)
@@ -23,14 +22,12 @@ const GlobalProvider = ({ children }) => {
   // Get data from local storage
   useEffect(() => {
     async function getData() {
-      console.log("Getting data")
       await chrome.storage.local.get(["screenTimeData"], (result) => {
-        console.log("ScreenTimeData:", result.screenTimeData)
         setData(result.screenTimeData)
       })
     }
     getData()
-    const interval = setInterval(getData, 5000)
+    const interval = setInterval(getData, 10000)
     return () => clearInterval(interval)
   }, [])
 

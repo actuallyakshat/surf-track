@@ -58,7 +58,6 @@ export default function Blocked() {
   useEffect(() => {
     chrome.storage.local.get("blockedDomains", (result) => {
       setBlockedDomains(result.blockedDomains || [])
-      console.log("Blocked domains:", result.blockedDomains)
     })
   }, [])
 
@@ -67,16 +66,13 @@ export default function Blocked() {
     const blockedDomains = result.blockedDomains || []
 
     if (checked) {
-      console.log("Blocking domain:", domain)
       const newBlockedDomains = [...blockedDomains, domain]
       await chrome.storage.local.set({ blockedDomains: newBlockedDomains })
       setBlockedDomains(newBlockedDomains)
     } else {
-      console.log("Unblocking domain:", domain)
       const newBlockedDomains = blockedDomains.filter(
         (blockedDomain) => blockedDomain !== domain
       )
-      console.log("New blocked domains:", newBlockedDomains)
       await chrome.storage.local.set({ blockedDomains: newBlockedDomains })
       setBlockedDomains(newBlockedDomains)
     }

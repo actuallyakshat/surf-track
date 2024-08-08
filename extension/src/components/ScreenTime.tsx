@@ -26,15 +26,9 @@ export default function ScreenTime() {
     }
 
     getData()
-    const interval = setInterval(getData, 5000)
+    const interval = setInterval(getData, 10000)
     return () => clearInterval(interval)
   }, [globalScreenTimeData, selectedDate])
-
-  useEffect(() => {
-    if (selectedDate) {
-      console.log("selectedDate changed", selectedDate)
-    }
-  }, [selectedDate])
 
   return (
     <div className="p-4 space-y-4">

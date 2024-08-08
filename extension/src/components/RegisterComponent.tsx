@@ -79,7 +79,6 @@ const RegisterComponent: React.FC = () => {
           className="mt-4 space-y-3 w-full px-4"
           onSubmit={async (e) => {
             e.preventDefault()
-            console.log("Submitting registration form")
             await handleRegister()
           }}>
           <Input
