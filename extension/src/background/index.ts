@@ -19,22 +19,23 @@ chrome.runtime.onInstalled.addListener(async () => {
     console.log("ScreenTimeData:", result.screenTimeData)
   })
 
-  chrome.alarms.create("syncData", { periodInMinutes: 10 })
+  // chrome.alarms.create("syncData", { periodInMinutes: 10 })
   chrome.alarms.create("updateCurrentTabScreenTime", { periodInMinutes: 1 })
 })
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === "syncData") {
-    await chrome.storage.local.get(["screenTimeData"], async (data) => {
-      if (data.screenTimeData) {
-        const currentWeekNumber = getWeekNumber(new Date())
-        if (data[currentWeekNumber].synced === false) {
-          console.log("Alarm triggered: syncData")
-          console.log("Syncing data")
-          await syncPreviousDataWithBackend(currentWeekNumber, data)
-        }
-      }
-    })
+    //TODO: Implement syncing data
+    // await chrome.storage.local.get(["screenTimeData"], async (data) => {
+    //   if (data.screenTimeData) {
+    //     const currentWeekNumber = getWeekNumber(new Date())
+    //     if (data[currentWeekNumber].synced === false) {
+    //       console.log("Alarm triggered: syncData")
+    //       console.log("Syncing data")
+    //       await syncPreviousDataWithBackend(currentWeekNumber, data)
+    //     }
+    //   }
+    // })
   } else if (alarm.name === "updateCurrentTabScreenTime") {
     updateCurrentTabScreenTime()
   }

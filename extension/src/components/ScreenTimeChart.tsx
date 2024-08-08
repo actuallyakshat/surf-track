@@ -5,7 +5,7 @@ import {
   type ChartConfig
 } from "@/components/ui/chart"
 import { formatSeconds, getWeekNumber } from "@/lib/functions"
-import type { ScreenTimeData } from "@/types/types"
+import type { DailyData, ScreenTimeData } from "@/types/types"
 import {
   CircleChevronLeft,
   CircleChevronRight,
@@ -25,26 +25,18 @@ const chartConfig: ChartConfig = {
 }
 
 const getStartOfWeekForYear = (weekNumber: number, year: number) => {
-  console.log(
-    `Calculating start of week for weekNumber=${weekNumber} and year=${year}`
-  )
-
   // Get the first day of the year
   const jan1 = new Date(year, 0, 1)
-  console.log(`Initial date (Jan 1st): ${jan1}`)
 
   // Calculate the first Monday of the year
   const dayOfWeek = jan1.getDay() // 0 (Sunday) to 6 (Saturday)
-  console.log(`Day of the week for Jan 1st: ${dayOfWeek}`)
 
   const distanceToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Distance to Monday
   jan1.setDate(jan1.getDate() + (1 - distanceToMonday)) // Move to Monday of the first week
-  console.log(`Adjusted date to first Monday: ${jan1}`)
 
   // Calculate the start of the specified week
   const startOfWeek = new Date(jan1)
   startOfWeek.setDate(startOfWeek.getDate() + (weekNumber - 1) * 7)
-  console.log(`Start of the specified week: ${startOfWeek}`)
 
   return startOfWeek
 }
@@ -65,24 +57,25 @@ const convertToChartData = (data: ScreenTimeData, currentWeek: number) => {
     date.setDate(startOfWeek.getDate() + index) // Get date for each day of the week
     const dateKey = date.toISOString().split("T")[0]
 
-    const dayData = weekData[dateKey]?.domains || {}
+    const dayData: DailyData = weekData[dateKey] || { domains: {} }
     const totalSeconds = Object.values(dayData).reduce(
       (sum, entry) => sum + entry.timeSpent,
       0
     )
 
+    const screentime = totalSeconds / 60 // Convert seconds to minutes
+
     console.log(`Date: ${dateKey}, Total Seconds: ${totalSeconds}`)
 
     return {
       day,
-      screentime: totalSeconds / 60, // Convert seconds to minutes
+      screentime, // Convert seconds to minutes
       dateKey
     }
   })
 
   return chartData
 }
-
 export function ScreenTimeChart({
   selectedDate,
   setSelectedDay
@@ -99,15 +92,12 @@ export function ScreenTimeChart({
   const { data: globalScreenTimeData } = useGlobalContext()
 
   useEffect(() => {
-    console.log(`Selected date: ${selectedDate}`)
-    console.log(`Week number: ${weekNumber}`)
-
+    console.log("Global screen time data:", globalScreenTimeData)
     const screenTimeData: ScreenTimeData = globalScreenTimeData || {}
-    console.log("Global screen time data:", screenTimeData)
-
+    console.log("Screen time data:", screenTimeData)
     const dataForChart = convertToChartData(screenTimeData, weekNumber)
+    console.log("Data for chart:", dataForChart)
     setChartData(dataForChart)
-    console.log("Chart data set:", dataForChart)
     getPercentageDifference()
   }, [weekNumber, globalScreenTimeData, selectedDate])
 
@@ -137,9 +127,6 @@ export function ScreenTimeChart({
         ),
       0
     )
-
-    console.log("Previous total seconds:", previousTotalSeconds)
-    console.log("Current total seconds:", currentTotalSeconds)
 
     const percentageDifference =
       ((currentTotalSeconds - previousTotalSeconds) / previousTotalSeconds) *
@@ -186,7 +173,6 @@ export function ScreenTimeChart({
             <CircleChevronLeft
               className="size-5"
               onClick={() => {
-                console.log("Previous week button clicked")
                 setWeekNumber(weekNumber - 1)
               }}
             />
@@ -196,7 +182,6 @@ export function ScreenTimeChart({
               className="size-5"
               onClick={() => {
                 if (weekNumber < getWeekNumber(new Date())) {
-                  console.log("Next week button clicked")
                   setWeekNumber(weekNumber + 1)
                 }
               }}
