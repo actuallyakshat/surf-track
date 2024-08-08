@@ -168,9 +168,6 @@ export function ScreenTimeChart({
     // Get the number of days with data in the given week
     const daysWithData = Object.keys(weekData)
 
-    console.log("weekData:", weekData)
-    console.log("daysWithData:", daysWithData)
-
     if (daysWithData.length === 0) {
       setAverageScreenTime("")
       return
@@ -178,15 +175,12 @@ export function ScreenTimeChart({
 
     // Calculate the total screen time for the given week
     const totalSeconds = daysWithData.reduce((sum, dateKey) => {
-      console.log("dateKey:", dateKey)
       const dailyData = weekData[dateKey]
-      console.log("dailyData:", dailyData)
 
       // Add the time spent on each website for the day
       return (
         sum +
         Object.values(dailyData).reduce((daySum, entry) => {
-          console.log("entry:", entry)
           return daySum + entry.timeSpent
         }, 0)
       )
@@ -198,11 +192,6 @@ export function ScreenTimeChart({
     // Convert average seconds to hours and minutes
     const hours = Math.floor(averageSeconds / 3600)
     const minutes = Math.floor((averageSeconds % 3600) / 60)
-
-    console.log("totalSeconds:", totalSeconds)
-    console.log("averageSeconds:", averageSeconds)
-    console.log("hours:", hours)
-    console.log("minutes:", minutes)
 
     if (currentWeek !== weekNumber) {
       setAverageScreenTime(
@@ -272,6 +261,8 @@ export function ScreenTimeChart({
               content={({ payload }) => {
                 if (payload && payload.length > 0) {
                   const { value } = payload[0]
+                  console.log("payload:", value)
+                  if (isNaN(value as number) || value === undefined) return null // Check for NaN or undefined
                   return (
                     <span className="py-1 px-4 rounded-lg border shadow-md bg-background">
                       Duration: {formatSeconds((value as number) * 60)}

@@ -26,7 +26,7 @@ export default function ScreenTime() {
     }
 
     getData()
-    const interval = setInterval(getData, 10000)
+    const interval = setInterval(getData, 5000)
     return () => clearInterval(interval)
   }, [globalScreenTimeData, selectedDate])
 

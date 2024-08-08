@@ -11,7 +11,7 @@ export function handleTabChange(
     console.log("Previous URL:", currentUrl)
     const endTime = Date.now()
     const timeSpent = Math.round((endTime - startTime) / 1000)
-    if (timeSpent < 5) {
+    if (timeSpent < 1) {
       return
     }
     updateScreenTime(new URL(currentUrl).hostname, timeSpent, favicon)

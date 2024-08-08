@@ -26,23 +26,28 @@ export default function DailyScreenTimeBreakdown({
         {Object.keys(dailyBreakdown).length > 0 ? (
           Object.keys(dailyBreakdown)
             .filter((domain) => dailyBreakdown[domain].favicon)
-            .map((domain) => (
-              <div key={domain} className="grid grid-cols-3 pr-6">
-                <div className="flex items-center col-span-2 gap-2">
-                  <img
-                    src={dailyBreakdown[domain].favicon}
-                    className="size-8 mr-2"
-                    alt={domain}
-                  />
-                  <button
-                    onClick={() => openNewTab(domain)}
-                    className="hover:underline whitespace-nowrap">
-                    {domain}
-                  </button>
-                </div>
-                <p className="col-span-1 text-right">
-                  {formatSeconds(dailyBreakdown[domain].timeSpent)}
-                </p>
+            .filter((domain) => dailyBreakdown[domain].timeSpent > 0)
+            .map((domain, index) => (
+              <div key={index}>
+                {domain && (
+                  <div key={domain} className="grid grid-cols-7 pr-6">
+                    <div className="flex items-center col-span-6 gap-2 truncate">
+                      <img
+                        src={dailyBreakdown[domain].favicon}
+                        className="size-8 mr-2"
+                        alt={domain}
+                      />
+                      <button
+                        onClick={() => openNewTab(domain)}
+                        className="hover:underline whitespace-nowrap flex-1 flex items-center justify-start w-full">
+                        {domain}
+                      </button>
+                    </div>
+                    <p className="col-span-1 text-right">
+                      {formatSeconds(dailyBreakdown[domain].timeSpent)}
+                    </p>
+                  </div>
+                )}
               </div>
             ))
         ) : (

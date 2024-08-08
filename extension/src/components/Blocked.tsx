@@ -12,33 +12,40 @@ type DomainData = {
   favicon?: string
 }
 
-function extractAllDomains(screenTimeData: ScreenTimeData): DomainData[] {
+function extractAllDomains(
+  screenTimeData: ScreenTimeData | null
+): DomainData[] {
+  if (!screenTimeData) return []
+
   const domainSet = new Set<string>()
   const domains: DomainData[] = []
+
   for (const [week] of Object.entries(screenTimeData)) {
     for (const [date, dailyData] of Object.entries(screenTimeData[week])) {
       for (const [domain, data] of Object.entries(dailyData)) {
-        if (!domain) continue
-        if (!domainSet.has(domain)) {
-          domainSet.add(domain)
-          domains.push({ domain, favicon: data.favicon })
-        }
+        if (!domain || domainSet.has(domain)) continue
+
+        domainSet.add(domain)
+        domains.push({ domain, favicon: data.favicon })
       }
     }
   }
-  domains.sort((a, b) => a.domain.localeCompare(b.domain))
-  return domains
+
+  return domains.sort((a, b) => a.domain.localeCompare(b.domain))
 }
 
 export default function Blocked() {
   const [searchQuery, setSearchQuery] = useState("")
   const { data } = useGlobalContext()
   const [blockedDomains, setBlockedDomains] = useState<string[]>([])
-  const [allDomains, setAllDomains] = useState<DomainData[]>(
-    extractAllDomains(data)
-  )
-  const [filteredDomains, setFilteredDomains] =
-    useState<DomainData[]>(allDomains)
+  const [allDomains, setAllDomains] = useState<DomainData[]>([])
+  const [filteredDomains, setFilteredDomains] = useState<DomainData[]>([])
+
+  useEffect(() => {
+    if (data) {
+      setAllDomains(extractAllDomains(data))
+    }
+  }, [data])
 
   useEffect(() => {
     if (searchQuery.length > 0) {
@@ -52,30 +59,22 @@ export default function Blocked() {
   }, [searchQuery, allDomains])
 
   useEffect(() => {
-    setAllDomains(extractAllDomains(data))
-  }, [data])
-
-  useEffect(() => {
     chrome.storage.local.get("blockedDomains", (result) => {
-      setBlockedDomains(result.blockedDomains || [])
+      if (result && result.blockedDomains) {
+        setBlockedDomains(result.blockedDomains)
+      }
     })
   }, [])
 
-  async function handleBlock(domain: string, checked: boolean) {
-    const result = await chrome.storage.local.get("blockedDomains")
-    const blockedDomains = result.blockedDomains || []
+  const handleBlock = async (domain: string, checked: boolean) => {
+    if (!domain) return
 
-    if (checked) {
-      const newBlockedDomains = [...blockedDomains, domain]
-      await chrome.storage.local.set({ blockedDomains: newBlockedDomains })
-      setBlockedDomains(newBlockedDomains)
-    } else {
-      const newBlockedDomains = blockedDomains.filter(
-        (blockedDomain) => blockedDomain !== domain
-      )
-      await chrome.storage.local.set({ blockedDomains: newBlockedDomains })
-      setBlockedDomains(newBlockedDomains)
-    }
+    const newBlockedDomains = checked
+      ? [...blockedDomains, domain]
+      : blockedDomains.filter((blockedDomain) => blockedDomain !== domain)
+
+    await chrome.storage.local.set({ blockedDomains: newBlockedDomains })
+    setBlockedDomains(newBlockedDomains)
   }
 
   return (
@@ -93,7 +92,7 @@ export default function Blocked() {
         />
 
         <div className="space-y-3">
-          {filteredDomains.length > 0 ? (
+          {filteredDomains?.length > 0 ? (
             <>
               <div className="w-full flex justify-between items-center my-3">
                 <p className="font-bold text-lg">Name</p>
@@ -101,11 +100,11 @@ export default function Blocked() {
               </div>
               {filteredDomains.map((domain, index) => (
                 <>
-                  {domain.favicon && (
+                  {domain.favicon && domain.domain && (
                     <div
                       key={`${domain.domain}-${index}`}
-                      className="grid grid-cols-3 pr-6">
-                      <div className="flex items-center col-span-2">
+                      className="grid grid-cols-6 items-center pr-5">
+                      <div className="flex items-center col-span-5 truncate">
                         <img
                           src={domain.favicon}
                           className="size-8 mr-3"
@@ -117,7 +116,7 @@ export default function Blocked() {
                           {domain.domain}
                         </button>
                       </div>
-                      <div className="ml-auto">
+                      <div className="col-span-1 flex items-center justify-end">
                         <Switch
                           checked={blockedDomains.includes(domain.domain)}
                           onCheckedChange={(checked) =>
