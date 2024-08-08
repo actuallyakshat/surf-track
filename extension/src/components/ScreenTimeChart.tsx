@@ -65,7 +65,7 @@ const convertToChartData = (data: ScreenTimeData, currentWeek: number) => {
     date.setDate(startOfWeek.getDate() + index) // Get date for each day of the week
     const dateKey = date.toISOString().split("T")[0]
 
-    const dayData = weekData[dateKey] || {}
+    const dayData = weekData[dateKey]?.domains || {}
     const totalSeconds = Object.values(dayData).reduce(
       (sum, entry) => sum + entry.timeSpent,
       0

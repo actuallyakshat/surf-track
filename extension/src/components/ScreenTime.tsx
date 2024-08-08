@@ -20,10 +20,8 @@ export default function ScreenTime() {
     function getData() {
       const date = new Date(selectedDate)
       const weekOfSelectedDate = getWeekNumber(date)
-      const dayData =
-        globalScreenTimeData[weekOfSelectedDate]?.[selectedDate] || {}
-      const sortedDayData = sortScreenTimeDataForDate(dayData)
-      console.log("🚀 ~ getData ~ sortedDayData:", sortedDayData)
+      const dayData = globalScreenTimeData[weekOfSelectedDate]?.[selectedDate]
+      const sortedDayData = dayData ? sortScreenTimeDataForDate(dayData) : {}
       setDailyBreakdown(sortedDayData)
     }
 

@@ -86,7 +86,7 @@ export function formatDate(dateString: string): string {
   return `${day}${daySuffix(day)} ${month}`
 }
 
-export function sortScreenTimeDataForDate(dailyData: DailyData): DailyData {
+export function sortScreenTimeDataForDate(dailyData: DailyData) {
   // Convert the dailyData object to an array of entries
   const entries = Object.entries(dailyData) as [string, ScreenTimeEntry][]
 
@@ -96,7 +96,7 @@ export function sortScreenTimeDataForDate(dailyData: DailyData): DailyData {
   )
 
   // Convert the sorted entries back to an object
-  const sortedDailyData: DailyData = Object.fromEntries(sortedEntries)
+  const sortedDailyData = Object.fromEntries(sortedEntries)
 
   console.log("Sorted daily data:", sortedDailyData)
   return sortedDailyData

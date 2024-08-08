@@ -1,5 +1,4 @@
 import type { GlobalContextType, ScreenTimeData } from "@/types/types"
-import axios from "axios"
 import React, { useContext, useEffect, useState } from "react"
 
 const GlobalContext: React.Context<GlobalContextType> =

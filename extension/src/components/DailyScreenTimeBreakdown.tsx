@@ -10,7 +10,7 @@ export default function DailyScreenTimeBreakdown({
   dailyBreakdown,
   selectedDate
 }: {
-  dailyBreakdown: DailyData
+  dailyBreakdown: DailyData | {}
   selectedDate: string
 }) {
   return (
