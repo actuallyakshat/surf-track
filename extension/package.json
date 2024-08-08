@@ -1,7 +1,7 @@
 {
-  "name": "extension",
-  "displayName": "Extension",
-  "version": "0.0.1",
+  "name": "surf-track",
+  "displayName": "Surf Track",
+  "version": "1.0.0",
   "description": "A chrome extension that tracks the amount of time you spend on the web",
   "author": "Akshat Dubey",
   "scripts": {
