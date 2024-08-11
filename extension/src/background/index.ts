@@ -1,14 +1,8 @@
-import { getWeekNumber } from "@/lib/functions"
-
-import "./sync"
-
-import { syncPreviousDataWithBackend } from "./sync"
 import { handleTabChange, updateScreenTime } from "./tracking"
 
 let currentUrl = ""
 let startTime = 0
 let favicon = undefined
-// let userId
 let isWindowFocused = true
 
 const IGNORED_DOMAINS = ["newtab", "extensions", "localhost", "settings"]
@@ -37,22 +31,26 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     //   }
     // })
   } else if (alarm.name === "updateCurrentTabScreenTime") {
-    updateCurrentTabScreenTime()
+    await updateCurrentTabScreenTime()
   }
 })
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && tab.url) {
-    await isBlocked(new URL(tab.url).hostname, tabId, tab)
-    updateTabInfo(tab)
+    try {
+      await isBlocked(new URL(tab.url).hostname, tabId, tab)
+      await updateTabInfo(tab)
+    } catch (error) {
+      console.error("Error handling tab update:", error)
+    }
   }
 })
 
-chrome.windows.onFocusChanged.addListener((windowId) => {
+chrome.windows.onFocusChanged.addListener(async (windowId) => {
   if (windowId === chrome.windows.WINDOW_ID_NONE) {
     // Window lost focus
     isWindowFocused = false
-    updateCurrentTabScreenTime()
+    await updateCurrentTabScreenTime()
   } else {
     // Window gained focus
     isWindowFocused = true
@@ -74,23 +72,27 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   })
 })
 
-function updateCurrentTabScreenTime() {
+async function updateCurrentTabScreenTime() {
   if (currentUrl) {
     console.log("Updating current tab screen time: ", currentUrl)
     const endTime = Date.now()
     const timeSpent = Math.round((endTime - startTime) / 1000)
-    updateScreenTime(new URL(currentUrl).hostname, timeSpent, favicon)
-    startTime = endTime // Reset start time to current time
+    try {
+      await updateScreenTime(new URL(currentUrl).hostname, timeSpent, favicon)
+      startTime = endTime // Reset start time to current time
+    } catch (error) {
+      console.error("Error updating screen time:", error)
+    }
   }
 }
 
-function updateTabInfo(tab) {
+async function updateTabInfo(tab) {
   const url = new URL(tab.url)
   const domain = url.hostname
 
   if (IGNORED_DOMAINS.some((ignored) => domain.includes(ignored))) {
     console.log(`Ignoring domain: ${domain}`)
-    updateCurrentTabScreenTime()
+    await updateCurrentTabScreenTime()
     resetTabInfo()
     return
   }
@@ -134,7 +136,7 @@ async function isBlocked(domain, tabId, tab) {
   console.log("Blocked domains List:", blockedDomainList)
   if (blockedDomainList.includes(domain)) {
     console.log("Tab is blocked:", tab.url)
-    retryRemoveTab(tabId)
+    await retryRemoveTab(tabId)
   }
 }
 
