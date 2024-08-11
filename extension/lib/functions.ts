@@ -2,7 +2,10 @@ import type { DailyData, ScreenTimeData, ScreenTimeEntry } from "@/types/types"
 
 export function formatSeconds(seconds: number): string {
   const hours = Math.floor(seconds / 3600)
-  const minutes = Math.ceil((seconds % 3600) / 60)
+  const minutes =
+    seconds % 3600 > 60
+      ? Math.ceil((seconds % 3600) / 60)
+      : Math.floor((seconds % 3600) / 60)
   const remainingSeconds = seconds % 60
 
   if (hours > 0) {

@@ -198,9 +198,13 @@ export function ScreenTimeChart({
         `You averaged ${hours}h ${minutes}m in week ${weekNumber} of year ${currentYear}`
       )
     } else {
-      setAverageScreenTime(
-        `You have averaged ${hours}h ${minutes}m upto now this week`
-      )
+      if (hours === 0) {
+        setAverageScreenTime(`You have averaged ${minutes}m upto now this week`)
+      } else {
+        setAverageScreenTime(
+          `You have averaged ${hours}h ${minutes}m upto now this week`
+        )
+      }
     }
   }
 
