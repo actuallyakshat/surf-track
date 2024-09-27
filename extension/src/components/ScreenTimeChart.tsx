@@ -265,7 +265,7 @@ export function ScreenTimeChart({
               content={({ payload }) => {
                 if (payload && payload.length > 0) {
                   const { value } = payload[0]
-                  console.log("payload:", value)
+                  // console.log("payload:", value)
                   if (isNaN(value as number) || value === undefined) return null // Check for NaN or undefined
                   return (
                     <span className="py-1 px-4 rounded-lg border shadow-md bg-background">
