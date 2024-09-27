@@ -1,5 +1,6 @@
 import { formatLocalDate, getWeekNumber } from "@/lib/functions"
 
+// Handles tab change events
 export function handleTabChange(
   url: string,
   currentUrl: string,
@@ -20,6 +21,7 @@ export function handleTabChange(
   return { currentUrl: url, startTime: Date.now(), favicon: favicon }
 }
 
+// Updates the screen time data for the given domain
 export function updateScreenTime(
   domain: string,
   timeSpent: number,

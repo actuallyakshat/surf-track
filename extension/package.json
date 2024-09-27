@@ -52,7 +52,8 @@
       "storage",
       "windows",
       "alarms",
-      "unlimitedStorage"
+      "unlimitedStorage",
+      "idle"
     ]
   }
 }
