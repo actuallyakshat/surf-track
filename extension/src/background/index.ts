@@ -1,5 +1,6 @@
 import { handleTabChange, updateScreenTime } from "./tracking"
 
+// Global variables
 let currentUrl = ""
 let startTime = 0
 let favicon = undefined
@@ -7,16 +8,20 @@ let isWindowFocused = true
 
 const IGNORED_DOMAINS = ["newtab", "extensions", "localhost", "settings"]
 
+// Fetching data from the storage on initial load
 chrome.runtime.onInstalled.addListener(async () => {
   console.log("Extension installed")
   await chrome.storage.local.get(["screenTimeData"], (result) => {
     console.log("ScreenTimeData:", result.screenTimeData)
   })
 
+  // FUTURE SCOPE: Implement syncing data with a server.
   // chrome.alarms.create("syncData", { periodInMinutes: 10 })
   chrome.alarms.create("updateCurrentTabScreenTime", { periodInMinutes: 1 })
 })
 
+// Listening for alarm events.
+// FUTURE SCOPR: Implement syncing data with a server.
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === "syncData") {
     //TODO: Implement syncing data
@@ -35,6 +40,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 })
 
+// Listening for tab updates
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && tab.url) {
     try {
@@ -46,6 +52,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 })
 
+// Listening for window focus changes
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
   if (windowId === chrome.windows.WINDOW_ID_NONE) {
     // Window lost focus
@@ -62,6 +69,7 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
   }
 })
 
+// Listening for tab activations
 chrome.tabs.onActivated.addListener((activeInfo) => {
   chrome.tabs.get(activeInfo.tabId, async (tab) => {
     if (tab.url) {
@@ -72,6 +80,7 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   })
 })
 
+// Function tp update the current tab's screen time
 async function updateCurrentTabScreenTime() {
   if (currentUrl) {
     console.log("Updating current tab screen time: ", currentUrl)
@@ -86,6 +95,7 @@ async function updateCurrentTabScreenTime() {
   }
 }
 
+// Function to update the tab info
 async function updateTabInfo(tab) {
   const url = new URL(tab.url)
   const domain = url.hostname
@@ -109,6 +119,7 @@ async function updateTabInfo(tab) {
   }
 }
 
+// Function to retry fetching the favicon. I am doing this because sometimes the favicon is not available immediately after the tab is activated.
 function retryFetchFavicon(tabId, retries) {
   if (retries <= 0) return
 
@@ -123,12 +134,14 @@ function retryFetchFavicon(tabId, retries) {
   }, 1000) // Retry every 1s
 }
 
+// Utility Function to reset the tab info
 function resetTabInfo() {
   currentUrl = ""
   startTime = 0
   favicon = undefined
 }
 
+// Function to check if the url of the current tab is blocked.
 async function isBlocked(domain, tabId, tab) {
   const blockedDomains = await chrome.storage.local.get("blockedDomains")
   console.log("Blocked domains:", blockedDomains)
@@ -140,6 +153,7 @@ async function isBlocked(domain, tabId, tab) {
   }
 }
 
+// Function to retry removing the tab after a certain number of retries. I am doing this because sometimes the tab is not removed immediately after the tab is activated.
 function retryRemoveTab(tabId, retries = 5) {
   if (retries <= 0) {
     console.error(`Failed to remove tab ${tabId} after multiple attempts`)
