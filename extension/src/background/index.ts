@@ -1,77 +1,42 @@
 import { handleTabChange, updateScreenTime } from "./tracking"
 
-// Global variables
 let currentUrl = ""
 let startTime = 0
-let favicon: string | undefined = undefined
+let favicon = undefined
 let isWindowFocused = true
-let isSystemActive = true
 
 const IGNORED_DOMAINS = ["newtab", "extensions", "localhost", "settings"]
-const IDLE_DETECTION_INTERVAL = 1800 // 30 minutes in seconds
 
-// Fetching data from the storage on initial load
 chrome.runtime.onInstalled.addListener(async () => {
   console.log("Extension installed")
   await chrome.storage.local.get(["screenTimeData"], (result) => {
     console.log("ScreenTimeData:", result.screenTimeData)
   })
 
-  // Set up periodic screen time updates
+  // chrome.alarms.create("syncData", { periodInMinutes: 10 })
   chrome.alarms.create("updateCurrentTabScreenTime", { periodInMinutes: 1 })
-
-  // Set up idle detection if the API is available
-  if (chrome.idle) {
-    chrome.idle.setDetectionInterval(IDLE_DETECTION_INTERVAL)
-    setupIdleListeners()
-  } else {
-    console.warn(
-      "chrome.idle API is not available. Idle detection will not function."
-    )
-  }
 })
 
-// Set up idle listeners if the API is available
-function setupIdleListeners() {
-  if (chrome.idle) {
-    chrome.idle.onStateChanged.addListener(async (state) => {
-      console.log("System state changed to:", state)
-      if (state === "active") {
-        if (!isSystemActive) {
-          // System was inactive and is now active
-          isSystemActive = true
-          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs[0]) {
-              updateTabInfo(tabs[0])
-            }
-          })
-        }
-      } else if (state === "locked") {
-        // System is locked
-        isSystemActive = false
-        await updateCurrentTabScreenTime()
-      } else if (state === "idle") {
-        // System has been idle for the set detection interval
-        // We'll continue tracking but flag this period as potentially inactive
-        console.log(
-          "System idle for extended period. Continuing to track but flagging as potentially inactive."
-        )
-        // Here you could implement additional logic to flag this period or handle it differently
-      }
-    })
-  }
-}
-
-// Listening for alarm events
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === "updateCurrentTabScreenTime") {
+  if (alarm.name === "syncData") {
+    //TODO: Implement syncing data
+    // await chrome.storage.local.get(["screenTimeData"], async (data) => {
+    //   if (data.screenTimeData) {
+    //     const currentWeekNumber = getWeekNumber(new Date())
+    //     if (data[currentWeekNumber].synced === false) {
+    //       console.log("Alarm triggered: syncData")
+    //       console.log("Syncing data")
+    //       await syncPreviousDataWithBackend(currentWeekNumber, data)
+    //     }
+    //   }
+    // })
+  } else if (alarm.name === "updateCurrentTabScreenTime") {
     await updateCurrentTabScreenTime()
   }
 })
 
-// Listening for tab updates
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (changeInfo.status === "complete" && tab.url && isSystemActive) {
+  if (changeInfo.status === "complete" && tab.url) {
     try {
       await isBlocked(new URL(tab.url).hostname, tabId, tab)
       await updateTabInfo(tab)
@@ -81,7 +46,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 })
 
-// Listening for window focus changes
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
   if (windowId === chrome.windows.WINDOW_ID_NONE) {
     // Window lost focus
@@ -90,32 +54,26 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
   } else {
     // Window gained focus
     isWindowFocused = true
-    if (isSystemActive) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-          updateTabInfo(tabs[0])
-        }
-      })
-    }
-  }
-})
-
-// Listening for tab activations
-chrome.tabs.onActivated.addListener((activeInfo) => {
-  if (isSystemActive) {
-    chrome.tabs.get(activeInfo.tabId, async (tab) => {
-      if (tab.url) {
-        await isBlocked(new URL(tab.url).hostname, activeInfo.tabId, tab)
-        console.log("Tab activated:", tab.url)
-        updateTabInfo(tab)
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        updateTabInfo(tabs[0])
       }
     })
   }
 })
 
-// Function to update the current tab's screen time
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  chrome.tabs.get(activeInfo.tabId, async (tab) => {
+    if (tab.url) {
+      await isBlocked(new URL(tab.url).hostname, activeInfo.tabId, tab)
+      console.log("Tab activated:", tab.url)
+      updateTabInfo(tab)
+    }
+  })
+})
+
 async function updateCurrentTabScreenTime() {
-  if (currentUrl && isSystemActive) {
+  if (currentUrl) {
     console.log("Updating current tab screen time: ", currentUrl)
     const endTime = Date.now()
     const timeSpent = Math.round((endTime - startTime) / 1000)
@@ -128,10 +86,7 @@ async function updateCurrentTabScreenTime() {
   }
 }
 
-// Function to update the tab info
-async function updateTabInfo(tab: chrome.tabs.Tab) {
-  if (!isSystemActive || !tab.url) return
-
+async function updateTabInfo(tab) {
   const url = new URL(tab.url)
   const domain = url.hostname
 
@@ -143,8 +98,8 @@ async function updateTabInfo(tab: chrome.tabs.Tab) {
   }
 
   const result = handleTabChange(tab.url, currentUrl, startTime, favicon)
-  currentUrl = result?.currentUrl || ""
-  startTime = result?.startTime || 0
+  currentUrl = result?.currentUrl
+  startTime = result?.startTime
 
   if (!tab.favIconUrl) {
     retryFetchFavicon(tab.id, 5)
@@ -154,9 +109,8 @@ async function updateTabInfo(tab: chrome.tabs.Tab) {
   }
 }
 
-// Function to retry fetching the favicon
-function retryFetchFavicon(tabId: number | undefined, retries: number) {
-  if (!tabId || retries <= 0) return
+function retryFetchFavicon(tabId, retries) {
+  if (retries <= 0) return
 
   setTimeout(() => {
     chrome.tabs.get(tabId, (tab) => {
@@ -169,18 +123,16 @@ function retryFetchFavicon(tabId: number | undefined, retries: number) {
   }, 1000) // Retry every 1s
 }
 
-// Utility Function to reset the tab info
 function resetTabInfo() {
   currentUrl = ""
   startTime = 0
   favicon = undefined
 }
 
-// Function to check if the url of the current tab is blocked
-async function isBlocked(domain: string, tabId: number, tab: chrome.tabs.Tab) {
+async function isBlocked(domain, tabId, tab) {
   const blockedDomains = await chrome.storage.local.get("blockedDomains")
   console.log("Blocked domains:", blockedDomains)
-  const blockedDomainList: string[] = blockedDomains.blockedDomains || []
+  const blockedDomainList = blockedDomains.blockedDomains || []
   console.log("Blocked domains List:", blockedDomainList)
   if (blockedDomainList.includes(domain)) {
     console.log("Tab is blocked:", tab.url)
@@ -188,8 +140,7 @@ async function isBlocked(domain: string, tabId: number, tab: chrome.tabs.Tab) {
   }
 }
 
-// Function to retry removing the tab
-function retryRemoveTab(tabId: number, retries = 5) {
+function retryRemoveTab(tabId, retries = 5) {
   if (retries <= 0) {
     console.error(`Failed to remove tab ${tabId} after multiple attempts`)
     return
