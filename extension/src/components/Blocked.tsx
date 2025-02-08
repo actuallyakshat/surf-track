@@ -1,8 +1,8 @@
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { formatSeconds, openNewTab, sortScreenTimeData } from "@/lib/functions"
+import { openNewTab } from "@/lib/functions"
 import type { ScreenTimeData } from "@/types/types"
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import { useGlobalContext } from "../context/globalContext"
 import TopBar from "./TopBar"

@@ -1,11 +1,10 @@
 import {
   formatLocalDate,
   getWeekNumber,
-  sortScreenTimeData,
   sortScreenTimeDataForDate
 } from "@/lib/functions"
-import type { DailyData, ScreenTimeData } from "@/types/types"
-import React, { useEffect, useState } from "react"
+import type { DailyData } from "@/types/types"
+import { useEffect, useState } from "react"
 
 import { useGlobalContext } from "../context/globalContext"
 import DailyScreenTimeBreakdown from "./DailyScreenTimeBreakdown"

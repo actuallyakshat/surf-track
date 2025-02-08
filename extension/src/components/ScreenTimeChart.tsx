@@ -5,14 +5,9 @@ import {
   type ChartConfig
 } from "@/components/ui/chart"
 import { formatSeconds, getWeekNumber } from "@/lib/functions"
-import type { DailyData, ScreenTimeData } from "@/types/types"
-import {
-  CircleChevronLeft,
-  CircleChevronRight,
-  TrendingDown,
-  TrendingUp
-} from "lucide-react"
-import React, { useEffect, useState } from "react"
+import type { ScreenTimeData } from "@/types/types"
+import { CircleChevronLeft, CircleChevronRight } from "lucide-react"
+import { useEffect, useState } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
 import { useGlobalContext } from "../context/globalContext"
@@ -25,54 +20,37 @@ const chartConfig: ChartConfig = {
 }
 
 const getStartOfWeekForYear = (weekNumber: number, year: number) => {
-  // Get the first day of the year
   const jan1 = new Date(year, 0, 1)
-
-  // Calculate the first Monday of the year
-  const dayOfWeek = jan1.getDay() // 0 (Sunday) to 6 (Saturday)
-
-  const distanceToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Distance to Monday
-  jan1.setDate(jan1.getDate() + (1 - distanceToMonday)) // Move to Monday of the first week
-
-  // Calculate the start of the specified week
+  const dayOfWeek = jan1.getDay()
+  const distanceToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+  jan1.setDate(jan1.getDate() + (1 - distanceToMonday))
   const startOfWeek = new Date(jan1)
   startOfWeek.setDate(startOfWeek.getDate() + (weekNumber - 1) * 7)
-
   return startOfWeek
 }
 
 const convertToChartData = (data: ScreenTimeData, currentWeek: number) => {
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-  const year = new Date().getFullYear() // Use the current year or any specific year if needed
-
-  // Calculate start of the week for the given week number
+  const year = new Date().getFullYear()
   const startOfWeek = getStartOfWeekForYear(currentWeek, year)
 
-  // Retrieve data for the specified week
-  const weekData = data[currentWeek] || {}
-
-  // Generate chart data from weekData
-  const chartData = daysOfWeek.map((day, index) => {
+  return daysOfWeek.map((day, index) => {
     const date = new Date(startOfWeek)
-    date.setDate(startOfWeek.getDate() + index) // Get date for each day of the week
+    date.setDate(startOfWeek.getDate() + index)
     const dateKey = date.toISOString().split("T")[0]
-
-    const dayData: DailyData = weekData[dateKey] || { domains: {} }
+    const weekData = data[currentWeek] || {}
+    const dayData = weekData[dateKey] || {}
     const totalSeconds = Object.values(dayData).reduce(
-      (sum, entry) => sum + entry.timeSpent,
+      (sum, entry: any) => sum + (entry.timeSpent || 0),
       0
     )
 
-    const screentime = totalSeconds / 60 // Convert seconds to minutes
-
     return {
       day,
-      screentime, // Convert seconds to minutes
+      screentime: Number(totalSeconds) / 60, // Convert to minutes
       dateKey
     }
   })
-
-  return chartData
 }
 
 export function ScreenTimeChart({
@@ -98,64 +76,6 @@ export function ScreenTimeChart({
     // getPercentageDifference()
     getAverageScreenTimeForWeek(globalScreenTimeData, weekNumber)
   }, [weekNumber, globalScreenTimeData, selectedDate])
-
-  // function getPercentageDifference() {
-  //   const currentWeek = getWeekNumber(new Date(selectedDate))
-  //   const previousWeek = currentWeek - 1
-  //   const previousWeekData = globalScreenTimeData[previousWeek] || {}
-  //   const currentWeekData = globalScreenTimeData[currentWeek] || {}
-
-  //   const previousTotalSeconds = Object.values(previousWeekData).reduce(
-  //     (sum, dailyData) =>
-  //       sum +
-  //       Object.values(dailyData).reduce(
-  //         (daySum, entry) => daySum + entry.timeSpent,
-  //         0
-  //       ),
-  //     0
-  //   )
-
-  //   // Calculate total seconds for the current week
-  //   const currentTotalSeconds = Object.values(currentWeekData).reduce(
-  //     (sum, dailyData) =>
-  //       sum +
-  //       Object.values(dailyData).reduce(
-  //         (daySum, entry) => daySum + entry.timeSpent,
-  //         0
-  //       ),
-  //     0
-  //   )
-
-  //   const percentageDifference =
-  //     ((currentTotalSeconds - previousTotalSeconds) / previousTotalSeconds) *
-  //     100
-
-  //   if (previousTotalSeconds === 0) {
-  //     return "No screen time recorded for the previous week."
-  //   }
-
-  //   if (percentageDifference > 0) {
-  //     return (
-  //       <div className="flex items-center gap-2">
-  //         <span>
-  //           Your screen time is up by {percentageDifference.toFixed(2)}% this
-  //           week
-  //         </span>
-  //         <TrendingUp className="h-4 w-4" />
-  //       </div>
-  //     )
-  //   } else {
-  //     return (
-  //       <div className="flex items-center gap-2">
-  //         <span>
-  //           Your screen time is down by{" "}
-  //           {Math.abs(percentageDifference).toFixed(2)}% this week
-  //         </span>
-  //         <TrendingDown className="h-4 w-4" />
-  //       </div>
-  //     )
-  //   }
-  // }
 
   function getAverageScreenTimeForWeek(
     globalScreenTimeData: ScreenTimeData,

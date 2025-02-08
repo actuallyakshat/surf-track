@@ -33,10 +33,6 @@ export function sortScreenTimeData(
         ([, a], [, b]) => b.timeSpent - a.timeSpent
       )
       sortedScreenTimeData[week][date] = Object.fromEntries(sortedEntries)
-      // console.log(
-      //   `Sorted data for ${date} in week ${week}:`,
-      //   sortedScreenTimeData[week][date]
-      // )
     }
   }
 

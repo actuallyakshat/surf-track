@@ -120,7 +120,7 @@ function retryFetchFavicon(tabId, retries) {
         retryFetchFavicon(tabId, retries - 1)
       }
     })
-  }, 1000) // Retry every 1s
+  }, 1000)
 }
 
 function resetTabInfo() {

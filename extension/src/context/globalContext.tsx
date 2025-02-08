@@ -5,21 +5,8 @@ const GlobalContext: React.Context<GlobalContextType> =
   React.createContext(null)
 
 const GlobalProvider = ({ children }) => {
-  const [loading, setLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [data, setData] = useState<ScreenTimeData>({})
 
-  // Check if user is authenticated (token is stored in local storage)
-  useEffect(() => {
-    chrome.storage.local.get("surfTrack_token", (result) => {
-      if (result.surfTrack_token) {
-        setIsAuthenticated(true)
-      }
-      setLoading(false)
-    })
-  }, [])
-
-  // Get data from local storage
   useEffect(() => {
     async function getData() {
       await chrome.storage.local.get(["screenTimeData"], (result) => {
@@ -31,21 +18,11 @@ const GlobalProvider = ({ children }) => {
     return () => clearInterval(interval)
   }, [])
 
-  function logoutHandler() {
-    chrome.storage.local.remove("surfTrack_token")
-    setIsAuthenticated(false)
-  }
-
   return (
     <GlobalContext.Provider
       value={{
-        loading,
-        setLoading,
-        isAuthenticated,
-        setIsAuthenticated,
         data,
-        setData,
-        logoutHandler
+        setData
       }}>
       {children}
     </GlobalContext.Provider>
