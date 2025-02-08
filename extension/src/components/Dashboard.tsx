@@ -1,16 +1,11 @@
-import React from "react"
-
-import { useGlobalContext } from "../context/globalContext"
-import ScreenTime from "./ScreenTime"
-import TopBar from "./TopBar"
+// import ScreenTime from "./ScreenTime"
+import TopBar from "./top-bar";
 
 export default function Dashboard() {
-  const { loading } = useGlobalContext()
-  if (loading) return null
   return (
     <div className="w-full">
       <TopBar />
-      <ScreenTime />
+      {/* <ScreenTime /> */}
     </div>
-  )
+  );
 }

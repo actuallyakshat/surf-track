@@ -1,33 +1,22 @@
-import { useState } from "react"
-import { Route, MemoryRouter as Router, Routes } from "react-router-dom"
+import { Route, MemoryRouter as Router, Routes } from "react-router";
 
-import "@/src/style.css"
-
-import Dashboard from "@/src/components/Dashboard"
-import LoginComponent from "@/src/components/LoginComponent"
-import RegisterComponent from "@/src/components/RegisterComponent"
-import { GlobalProvider, useGlobalContext } from "@/src/context/globalContext"
-
-import Blocked from "./components/Blocked"
+import "@/index.css";
+import { GlobalProvider } from "./context/global-context";
+import Dashboard from "./components/Dashboard";
 
 function IndexPopup() {
   return (
-    <div className="h-[600px] w-[500px] relative flex font-Inter text-base noscrollbar">
+    <div className="h-[600px] m-auto border border-black w-[500px] relative flex font-Inter text-base noscrollbar">
       <GlobalProvider>
         <Router>
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/blocked" element={<Blocked />} />
-
-            {/* Enable when you implement DB Sync */}
-
-            {/* <Route path="/login" element={<LoginComponent />} />
-            <Route path="/register" element={<RegisterComponent />} /> */}
+            {/* <Route path="/blocked" element={<Blocked />} /> */}
           </Routes>
         </Router>
       </GlobalProvider>
     </div>
-  )
+  );
 }
 
-export default IndexPopup
+export default IndexPopup;
