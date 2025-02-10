@@ -12,6 +12,7 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     async function getData() {
       await chrome.storage.local.get(["screenTimeData"], (result) => {
         setData(result.screenTimeData);
+        console.log("ScreenTimeData:", result.screenTimeData);
       });
     }
     getData();

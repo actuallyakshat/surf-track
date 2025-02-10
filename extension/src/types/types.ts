@@ -1,24 +1,39 @@
-export interface GlobalContextType {
+interface WebsiteData {
+  time: number;
+  favicon?: string; // Optional since some entries may not have a favicon
+}
+
+// Daily data structure
+interface DailyData {
+  [domain: string]: WebsiteData;
+}
+
+// Weekly data structure (yyyy_ww as key)
+interface WeeklyData {
+  [date: string]: DailyData;
+}
+
+// Complete screen time data structure
+interface ScreenTimeData {
+  [yearWeek: string]: WeeklyData;
+}
+
+interface GlobalContextType {
   data: ScreenTimeData;
   setData: (data: ScreenTimeData) => void;
 }
 
-export interface ScreenTimeEntry {
-  timeSpent: number;
+interface TabChangeResult {
+  currentUrl: string;
+  startTime: number;
   favicon?: string;
-  weekNumber: number;
 }
 
-export interface DailyData {
-  domains: {
-    [domain: string]: ScreenTimeEntry;
-  };
-}
-
-export interface WeeklyData {
-  [date: string]: DailyData;
-}
-
-export interface ScreenTimeData {
-  [weekNumber: number]: WeeklyData;
-}
+export type {
+  DailyData,
+  WebsiteData,
+  WeeklyData,
+  ScreenTimeData,
+  GlobalContextType,
+  TabChangeResult,
+};

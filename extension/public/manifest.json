@@ -6,5 +6,12 @@
   "action": {
     "default_popup": "index.html"
   },
-  "permissions": []
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "permissions": ["tabs", "storage", "alarms"]
 }
