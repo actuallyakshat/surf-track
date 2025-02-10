@@ -82,7 +82,6 @@ export function ScreenTimeChart({
       const isCurrentWeek =
         getWeekNumber(new Date()) === getWeekNumber(currentWeekDate);
 
-      console.log("IS CURRENT WEEK:", isCurrentWeek);
       setAverageScreenTime(
         isCurrentWeek
           ? `You have averaged ${hours}h ${minutes}m up to now this week`
