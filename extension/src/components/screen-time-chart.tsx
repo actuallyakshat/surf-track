@@ -30,7 +30,11 @@ const convertToChartData = (
 ): DayData[] => {
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  const startOfWeek = new Date(currentDate.getTime());
+  // Calculate the start of the week (Monday)
+  const startOfWeek = new Date(currentDate);
+  const dayOfWeek = startOfWeek.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  const mondayOffset = (dayOfWeek + 6) % 7; // Calculate offset to get to Monday
+  startOfWeek.setDate(startOfWeek.getDate() - mondayOffset);
 
   return daysOfWeek.map((day, index) => {
     const date = new Date(startOfWeek);

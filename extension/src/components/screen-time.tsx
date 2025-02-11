@@ -37,7 +37,7 @@ export function ScreenTime() {
   }, [getData, selectedDate, globalScreenTimeData]);
 
   return (
-    <div className="p-2 space-y-2">
+    <div className="px-2 py-2 space-y-2">
       {Object.keys(globalScreenTimeData).length > 0 ? (
         <ScreenTimeChart
           data={globalScreenTimeData}
@@ -45,7 +45,10 @@ export function ScreenTime() {
           onDateSelect={setSelectedDate}
         />
       ) : (
-        <p>No screen time data available.</p>
+        <p className="text-center text-sm text-gray-500 py-3">
+          No data available yet. Start surfing and we will give you a breakdown
+          of your daily surfing activity.
+        </p>
       )}
       <DailyScreenTimeBreakdown
         dailyBreakdown={dailyBreakdown}

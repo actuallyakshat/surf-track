@@ -13,9 +13,9 @@ export function DailyScreenTimeBreakdown({
   const totalTime = dailyBreakdown.reduce((acc, curr) => acc + curr.time, 0);
 
   return (
-    <Card className="border-none p-0 rounded-none shadow-none">
-      <CardHeader className="px-2">
-        <CardTitle className="text-xl font-extrabold">
+    <Card className="border-none p-0 pt-3 rounded-none shadow-none">
+      <CardHeader className="px-2 py-0">
+        <CardTitle className="text-xl font-bold">
           Daily Breakdown - {new Date(selectedDate).toLocaleDateString("en-CA")}
         </CardTitle>
       </CardHeader>
@@ -25,7 +25,7 @@ export function DailyScreenTimeBreakdown({
             <div className="text-sm text-muted-foreground">
               Total screen time: {formatSeconds(totalTime)}
             </div>
-            <div className="space-y-2">
+            <div>
               {dailyBreakdown.map((item, index) => (
                 <div
                   key={`${item.domain}-${index}`}
