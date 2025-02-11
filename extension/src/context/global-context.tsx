@@ -1,5 +1,5 @@
 import type { GlobalContextType, ScreenTimeData } from "@/types/types";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const GlobalContext: React.Context<GlobalContextType> = React.createContext(
   {} as GlobalContextType
@@ -31,12 +31,4 @@ const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const useGlobalContext = () => {
-  const context = useContext(GlobalContext);
-  if (context === undefined) {
-    throw new Error("useGlobalContext must be used within a GlobalProvider");
-  }
-  return context;
-};
-
-export { GlobalProvider, useGlobalContext };
+export { GlobalProvider, GlobalContext };

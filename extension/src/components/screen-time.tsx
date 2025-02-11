@@ -1,4 +1,3 @@
-import { useGlobalContext } from "@/context/global-context";
 import {
   DailyData,
   formatLocalDate,
@@ -8,6 +7,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { DailyScreenTimeBreakdown } from "./daily-screen-time-breakdown";
 import { ScreenTimeChart } from "./screen-time-chart";
+import { useGlobalContext } from "@/context/use-global-context";
 
 export function ScreenTime() {
   const { data: globalScreenTimeData = {} } = useGlobalContext();

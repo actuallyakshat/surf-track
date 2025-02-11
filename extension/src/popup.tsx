@@ -2,8 +2,8 @@ import { Route, MemoryRouter as Router, Routes } from "react-router";
 
 import "@/index.css";
 import { GlobalProvider } from "./context/global-context";
-import Dashboard from "./components/dashboard";
 import Blocked from "./components/blocked";
+import Dashboard from "./components/dashboard";
 
 function IndexPopup() {
   return (
