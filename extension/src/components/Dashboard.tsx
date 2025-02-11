@@ -1,5 +1,6 @@
-import ScreenTime from "./ScreenTime"
-import TopBar from "./TopBar"
+// import ScreenTime from "./ScreenTime"
+import { ScreenTime } from "./screen-time";
+import TopBar from "./top-bar";
 
 export default function Dashboard() {
   return (
@@ -7,5 +8,5 @@ export default function Dashboard() {
       <TopBar />
       <ScreenTime />
     </div>
-  )
+  );
 }

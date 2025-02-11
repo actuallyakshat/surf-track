@@ -1,11 +1,9 @@
-import { Route, MemoryRouter as Router, Routes } from "react-router-dom"
+import { Route, MemoryRouter as Router, Routes } from "react-router";
 
-import "@/src/style.css"
-
-import Dashboard from "@/src/components/Dashboard"
-import { GlobalProvider } from "@/src/context/globalContext"
-
-import Blocked from "./components/Blocked"
+import "@/index.css";
+import { GlobalProvider } from "./context/global-context";
+import Dashboard from "./components/dashboard";
+import Blocked from "./components/blocked";
 
 function IndexPopup() {
   return (
@@ -19,7 +17,7 @@ function IndexPopup() {
         </Router>
       </GlobalProvider>
     </div>
-  )
+  );
 }
 
-export default IndexPopup
+export default IndexPopup;
