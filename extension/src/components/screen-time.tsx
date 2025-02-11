@@ -16,22 +16,16 @@ export function ScreenTime() {
     formatLocalDate(new Date(Date.now()))
   );
 
-  useEffect(() => {
-    console.log("Initial globalScreenTimeData:", globalScreenTimeData);
-    console.log("Initial selectedDate:", selectedDate);
-  }, [globalScreenTimeData, selectedDate]);
+  useEffect(() => {}, [globalScreenTimeData, selectedDate]);
 
   const getData = useCallback(() => {
     const yearWeekKey = getDataKey(new Date(selectedDate));
     const dailyData = globalScreenTimeData[yearWeekKey]?.[selectedDate] || {};
-    console.log("DAILY DATA --> ", dailyData);
 
     if (dailyData && Object.keys(dailyData).length > 0) {
       const sortedDayData = sortScreenTimeDataForDate(dailyData);
-      console.log("Sorted day data:", sortedDayData);
       setDailyBreakdown(sortedDayData);
     } else {
-      console.log("No data found for selected date, setting empty array");
       setDailyBreakdown([]);
     }
   }, [selectedDate, globalScreenTimeData]);

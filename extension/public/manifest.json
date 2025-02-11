@@ -13,5 +13,12 @@
   "icons": {
     "128": "icon.png"
   },
-  "permissions": ["tabs", "storage", "alarms"]
+  "permissions": [
+    "tabs",
+    "storage",
+    "windows",
+    "alarms",
+    "unlimitedStorage",
+    "idle"
+  ]
 }
