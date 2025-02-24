@@ -14,6 +14,8 @@ const IGNORED_DOMAINS = new Set([
   "about:blank",
 ]);
 
+const MAX_TIME_SPENT = 30;
+
 function isIgnored(url: URL): boolean {
   const { hostname, pathname } = url;
   return (
@@ -167,7 +169,13 @@ async function updateScreenTimeForUrl(
 ) {
   if (!url) return;
   const endTime = Date.now();
-  const timeSpent = Math.round((endTime - start) / 1000);
+  const elapsed = endTime - start;
+  let timeSpent = Math.round(elapsed / 1000);
+
+  // Cap the time spent to the maximum allowed
+  if (timeSpent > MAX_TIME_SPENT) {
+    timeSpent = MAX_TIME_SPENT;
+  }
   if (timeSpent < 1) return;
 
   const domain = new URL(url).hostname;
