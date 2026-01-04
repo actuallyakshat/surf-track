@@ -1,16 +1,16 @@
-import type { TrackingState } from "../types";
-import { StorageManager } from "./storage-manager";
-import { ALARM_NAMES } from "../lib/constants";
-import { getDomainFromUrl, isIgnoredDomain } from "../lib/domain-utils";
-import { Logger } from "./logger";
+import { ALARM_NAMES } from "../lib/constants"
+import { getDomainFromUrl, isIgnoredDomain } from "../lib/domain-utils"
+import type { TrackingState } from "../types"
+import { Logger } from "./logger"
+import { StorageManager } from "./storage-manager"
 
-const logger = new Logger("TrackingEngine");
+const logger = new Logger("TrackingEngine")
 
 export class TrackingEngine {
-  private storageManager: StorageManager;
+  private storageManager: StorageManager
 
   constructor(storageManager: StorageManager) {
-    this.storageManager = storageManager;
+    this.storageManager = storageManager
   }
 
   /**
@@ -19,21 +19,21 @@ export class TrackingEngine {
    */
   async initialize(): Promise<void> {
     try {
-      logger.info("Initializing TrackingEngine");
-      
+      logger.info("Initializing TrackingEngine")
+
       // Reset tracking state to clean slate
-      await this.resetTrackingState();
+      await this.resetTrackingState()
 
       // Setup periodic save alarm
-      await this.setupPeriodicSaveAlarm();
+      await this.setupPeriodicSaveAlarm()
 
       // Get currently active tab and start tracking if valid
-      await this.startTrackingActiveTab();
+      await this.startTrackingActiveTab()
 
-      logger.info("TrackingEngine initialized successfully");
+      logger.info("TrackingEngine initialized successfully")
     } catch (error) {
-      logger.error("Failed to initialize TrackingEngine", error);
-      throw error;
+      logger.error("Failed to initialize TrackingEngine", error)
+      throw error
     }
   }
 
@@ -43,36 +43,36 @@ export class TrackingEngine {
    */
   async resume(): Promise<void> {
     try {
-      logger.info("Resuming TrackingEngine after restart");
-      
+      logger.info("Resuming TrackingEngine after restart")
+
       // Get existing tracking state
-      const trackingState = await this.storageManager.getTrackingState();
-      logger.debug("Current tracking state", trackingState);
+      const trackingState = await this.storageManager.getTrackingState()
+      logger.debug("Current tracking state", trackingState)
 
       // If tracking was active, continue tracking
       if (trackingState?.currentUrl && trackingState?.startTime) {
         logger.info("Resuming tracking", {
           url: trackingState.currentUrl,
-          startTime: new Date(trackingState.startTime).toISOString(),
-        });
+          startTime: new Date(trackingState.startTime).toISOString()
+        })
 
         // Update lastActiveTime to current timestamp to mark as active
         await this.storageManager.updateTrackingState({
-          lastActiveTime: Date.now(),
-        });
+          lastActiveTime: Date.now()
+        })
       } else {
-        logger.info("No active tracking to resume, starting fresh");
+        logger.info("No active tracking to resume, starting fresh")
         // Start tracking the current active tab
-        await this.startTrackingActiveTab();
+        await this.startTrackingActiveTab()
       }
 
       // Ensure periodic save alarm exists
-      await this.setupPeriodicSaveAlarm();
+      await this.setupPeriodicSaveAlarm()
 
-      logger.info("TrackingEngine resumed successfully");
+      logger.info("TrackingEngine resumed successfully")
     } catch (error) {
-      logger.error("Failed to resume TrackingEngine", error);
-      throw error;
+      logger.error("Failed to resume TrackingEngine", error)
+      throw error
     }
   }
 
@@ -85,44 +85,44 @@ export class TrackingEngine {
     try {
       // User switched to a different application
       if (windowId === chrome.windows.WINDOW_ID_NONE) {
-        logger.info("Focus moved outside Chrome, saving session");
-        await this.saveCurrentSession();
-        await this.resetTrackingState();
-        return;
+        logger.info("Focus moved outside Chrome, saving session")
+        await this.saveCurrentSession()
+        await this.resetTrackingState()
+        return
       }
 
       // User switched to a Chrome window - get the active tab in that window
       const [activeTab] = await chrome.tabs.query({
         active: true,
-        windowId: windowId,
-      });
+        windowId: windowId
+      })
 
       if (!activeTab?.url) {
-        logger.info("No active tab in focused window");
-        await this.saveCurrentSession();
-        await this.resetTrackingState();
-        return;
+        logger.info("No active tab in focused window")
+        await this.saveCurrentSession()
+        await this.resetTrackingState()
+        return
       }
 
-      const domain = getDomainFromUrl(activeTab.url);
+      const domain = getDomainFromUrl(activeTab.url)
 
       // Check if domain should be ignored
       if (isIgnoredDomain(domain)) {
-        logger.info("Focused window has ignored domain:", { domain });
-        await this.saveCurrentSession();
-        await this.resetTrackingState();
-        return;
+        logger.info("Focused window has ignored domain:", { domain })
+        await this.saveCurrentSession()
+        await this.resetTrackingState()
+        return
       }
 
       // Save current session before switching
-      await this.saveCurrentSession();
+      await this.saveCurrentSession()
 
       // Start tracking the new active tab
-      await this.startTracking(activeTab.url, domain, activeTab.favIconUrl);
+      await this.startTracking(activeTab.url, domain, activeTab.favIconUrl)
 
-      logger.info("Window focus changed, now tracking:", { url: activeTab.url });
+      logger.info("Window focus changed, now tracking:", { url: activeTab.url })
     } catch (error) {
-      logger.error("Failed to handle window focus change", error);
+      logger.error("Failed to handle window focus change", error)
       // Don't throw - continue operation
     }
   }
@@ -134,39 +134,41 @@ export class TrackingEngine {
    */
   async handleIdleState(isIdle: boolean): Promise<void> {
     try {
-      const trackingState = await this.storageManager.getTrackingState();
+      const trackingState = await this.storageManager.getTrackingState()
 
       if (isIdle) {
-        logger.info("User is now idle, saving session");
+        logger.info("User is now idle, saving session")
         // Save current session before going idle
-        await this.saveCurrentSession();
+        await this.saveCurrentSession()
 
         // Update state to mark as idle (preserve other state for resume)
         await this.storageManager.updateTrackingState({
-          isIdle: true,
-        });
+          isIdle: true
+        })
       } else {
-        logger.info("User is now active");
+        logger.info("User is now active")
 
         // If there was a currentUrl being tracked before idle, resume tracking
         if (trackingState?.currentUrl) {
-          const now = Date.now();
+          const now = Date.now()
           await this.storageManager.updateTrackingState({
             isIdle: false,
             startTime: now,
-            lastActiveTime: now,
-          });
-          logger.info("Resumed tracking after idle:", { url: trackingState.currentUrl });
+            lastActiveTime: now
+          })
+          logger.info("Resumed tracking after idle:", {
+            url: trackingState.currentUrl
+          })
         } else {
           // No previous tracking, just mark as not idle and start tracking active tab
           await this.storageManager.updateTrackingState({
-            isIdle: false,
-          });
-          await this.startTrackingActiveTab();
+            isIdle: false
+          })
+          await this.startTrackingActiveTab()
         }
       }
     } catch (error) {
-      logger.error("Failed to handle idle state change", error);
+      logger.error("Failed to handle idle state change", error)
       // Don't throw - continue operation
     }
   }
@@ -180,31 +182,31 @@ export class TrackingEngine {
   async handleTabActivated(tabId: number, windowId: number): Promise<void> {
     try {
       // Save current session before switching
-      await this.saveCurrentSession();
+      await this.saveCurrentSession()
 
       // Get tab information
-      const tab = await chrome.tabs.get(tabId);
+      const tab = await chrome.tabs.get(tabId)
 
       if (!tab?.url) {
-        logger.info("Activated tab has no URL");
-        return;
+        logger.info("Activated tab has no URL")
+        return
       }
 
-      const domain = getDomainFromUrl(tab.url);
+      const domain = getDomainFromUrl(tab.url)
 
       // Check if domain should be ignored
       if (isIgnoredDomain(domain)) {
-        logger.info("Ignoring activated domain:", { domain });
-        await this.resetTrackingState();
-        return;
+        logger.info("Ignoring activated domain:", { domain })
+        await this.resetTrackingState()
+        return
       }
 
       // Start tracking the new tab
-      await this.startTracking(tab.url, domain, tab.favIconUrl);
+      await this.startTracking(tab.url, domain, tab.favIconUrl)
 
-      logger.info("Tab activated, now tracking:", { url: tab.url });
+      logger.info("Tab activated, now tracking:", { url: tab.url })
     } catch (error) {
-      logger.error("Failed to handle tab activation", error);
+      logger.error("Failed to handle tab activation", error)
       // Don't throw - Chrome might have already closed the tab
     }
   }
@@ -223,32 +225,32 @@ export class TrackingEngine {
   ): Promise<void> {
     try {
       // Get current tracking state
-      const trackingState = await this.storageManager.getTrackingState();
+      const trackingState = await this.storageManager.getTrackingState()
 
       // If same URL, nothing to do
       if (trackingState?.currentUrl === url) {
-        return;
+        return
       }
 
       // Save current session before switching URLs
-      await this.saveCurrentSession();
+      await this.saveCurrentSession()
 
-      const domain = getDomainFromUrl(url);
+      const domain = getDomainFromUrl(url)
 
       // Check if domain should be ignored
       if (isIgnoredDomain(domain)) {
-        logger.info("Ignoring URL change to domain:", { domain });
-        await this.resetTrackingState();
-        return;
+        logger.info("Ignoring URL change to domain:", { domain })
+        await this.resetTrackingState()
+        return
       }
 
       // Start tracking the new URL
-      const tab = await chrome.tabs.get(tabId).catch(() => null);
-      await this.startTracking(url, domain, tab?.favIconUrl);
+      const tab = await chrome.tabs.get(tabId).catch(() => null)
+      await this.startTracking(url, domain, tab?.favIconUrl)
 
-      logger.info("URL changed, now tracking:", { url });
+      logger.info("URL changed, now tracking:", { url })
     } catch (error) {
-      logger.error("Failed to handle URL change", error);
+      logger.error("Failed to handle URL change", error)
     }
   }
 
@@ -260,54 +262,54 @@ export class TrackingEngine {
    */
   async saveCurrentSession(): Promise<void> {
     try {
-      const trackingState = await this.storageManager.getTrackingState();
+      const trackingState = await this.storageManager.getTrackingState()
 
       // Nothing to save if not tracking anything
       if (!trackingState?.currentUrl || !trackingState?.startTime) {
-        return;
+        return
       }
 
       // Don't save if idle
       if (trackingState.isIdle) {
-        logger.debug("Skipping save - user is idle");
-        return;
+        logger.debug("Skipping save - user is idle")
+        return
       }
 
-      const now = Date.now();
-      const elapsedMs = now - trackingState.startTime;
+      const now = Date.now()
+      const elapsedMs = now - trackingState.startTime
 
       // Clock skew protection - don't save negative time
       if (elapsedMs < 0) {
-        logger.warn("Negative elapsed time detected, skipping save");
-        return;
+        logger.warn("Negative elapsed time detected, skipping save")
+        return
       }
 
-      const elapsedSeconds = Math.floor(elapsedMs / 1000);
+      const elapsedSeconds = Math.floor(elapsedMs / 1000)
 
       // Only save if there's meaningful time (at least 1 second)
       if (elapsedSeconds < 1) {
-        return;
+        return
       }
 
-      const domain = getDomainFromUrl(trackingState.currentUrl);
+      const domain = getDomainFromUrl(trackingState.currentUrl)
 
-      logger.info(`Saving ${elapsedSeconds}s for ${domain}`);
+      logger.info(`Saving ${elapsedSeconds}s for ${domain}`)
 
       // Add time to storage
       await this.storageManager.addTimeToCurrentDay(
         domain,
         elapsedSeconds,
         trackingState.favicon || undefined
-      );
+      )
 
       // Update startTime to 'now' to prevent over-counting in next periodic save
       // This was a major bug in previous implementation
       await this.storageManager.updateTrackingState({
         startTime: now,
-        lastActiveTime: now,
-      });
+        lastActiveTime: now
+      })
     } catch (error) {
-      logger.error("Failed to save current session", error);
+      logger.error("Failed to save current session", error)
       // Don't throw - this is a best-effort operation
     }
   }
@@ -321,10 +323,10 @@ export class TrackingEngine {
       startTime: null,
       lastActiveTime: null,
       isIdle: false,
-      favicon: null,
-    };
+      favicon: null
+    }
 
-    await this.storageManager.setTrackingState(cleanState);
+    await this.storageManager.setTrackingState(cleanState)
   }
 
   /**
@@ -333,14 +335,14 @@ export class TrackingEngine {
    */
   private async setupPeriodicSaveAlarm(): Promise<void> {
     // Clear existing alarm first to avoid duplicates
-    await chrome.alarms.clear(ALARM_NAMES.SAVE_DATA);
+    await chrome.alarms.clear(ALARM_NAMES.SAVE_DATA)
 
     // Create new periodic alarm
     await chrome.alarms.create(ALARM_NAMES.SAVE_DATA, {
-      periodInMinutes: 0.25, // 15 seconds
-    });
+      periodInMinutes: 0.25 // 15 seconds
+    })
 
-    logger.info("Periodic save alarm created");
+    logger.info("Periodic save alarm created")
   }
 
   /**
@@ -351,28 +353,28 @@ export class TrackingEngine {
       // Query for the active tab in the current window
       const [activeTab] = await chrome.tabs.query({
         active: true,
-        currentWindow: true,
-      });
+        currentWindow: true
+      })
 
       if (!activeTab?.url) {
-        logger.info("No active tab found or tab has no URL");
-        return;
+        logger.info("No active tab found or tab has no URL")
+        return
       }
 
-      const domain = getDomainFromUrl(activeTab.url);
+      const domain = getDomainFromUrl(activeTab.url)
 
       // Check if domain should be ignored
       if (isIgnoredDomain(domain)) {
-        logger.info("Ignoring domain:", { domain });
-        return;
+        logger.info("Ignoring domain:", { domain })
+        return
       }
 
       // Start tracking this tab
-      await this.startTracking(activeTab.url, domain, activeTab.favIconUrl);
+      await this.startTracking(activeTab.url, domain, activeTab.favIconUrl)
 
-      logger.info("Started tracking active tab:", { url: activeTab.url });
+      logger.info("Started tracking active tab:", { url: activeTab.url })
     } catch (error) {
-      logger.error("Failed to start tracking active tab", error);
+      logger.error("Failed to start tracking active tab", error)
       // Don't throw - this is a best-effort operation
     }
   }
@@ -391,7 +393,7 @@ export class TrackingEngine {
     favicon?: string
   ): Promise<void> {
     try {
-      const now = Date.now();
+      const now = Date.now()
 
       // Update tracking state
       await this.storageManager.setTrackingState({
@@ -399,24 +401,24 @@ export class TrackingEngine {
         startTime: now,
         lastActiveTime: now,
         isIdle: false,
-        favicon: favicon || null,
-      });
+        favicon: favicon || null
+      })
 
       // Fetch and save favicon (fire-and-forget, don't await)
       if (favicon) {
         this.storageManager.updateFavicon(domain, favicon).catch((error) => {
-          logger.warn(`Failed to update favicon for ${domain}`, error);
-        });
+          logger.warn(`Failed to update favicon for ${domain}`, error)
+        })
       } else {
         this.fetchAndSaveFavicon(domain).catch((error) => {
-          logger.warn(`Failed to fetch favicon for ${domain}`, error);
-        });
+          logger.warn(`Failed to fetch favicon for ${domain}`, error)
+        })
       }
 
-      logger.debug(`Tracking session started: ${url}`);
+      logger.debug(`Tracking session started: ${url}`)
     } catch (error) {
-      logger.error("Failed to start tracking", error);
-      throw error;
+      logger.error("Failed to start tracking", error)
+      throw error
     }
   }
 
@@ -428,19 +430,32 @@ export class TrackingEngine {
   private async fetchAndSaveFavicon(domain: string): Promise<void> {
     try {
       // First try to find an active tab for this domain to get its favicon
-      const tabs = await chrome.tabs.query({ url: `*://${domain}/*` });
-      const tabWithFavicon = tabs.find((t) => t.favIconUrl);
+      const tabs = await chrome.tabs.query({ url: `*://${domain}/*` })
+      const tabWithFavicon = tabs.find((t) => t.favIconUrl)
 
       if (tabWithFavicon?.favIconUrl) {
-        await this.storageManager.updateFavicon(domain, tabWithFavicon.favIconUrl);
-        return;
+        await this.storageManager.updateFavicon(
+          domain,
+          tabWithFavicon.favIconUrl
+        )
+        return
       }
 
       // Fallback to Chrome's favicon service
-      const faviconUrl = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=https://${domain}&size=32`;
-      await this.storageManager.updateFavicon(domain, faviconUrl);
+      const faviconUrl = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=https://${domain}&size=32`
+      await this.storageManager.updateFavicon(domain, faviconUrl)
     } catch (error) {
-      logger.error(`Failed to fetch favicon for ${domain}`, error);
+      logger.error(`Failed to fetch favicon for ${domain}`, error)
     }
+  }
+
+  /**
+   * Public method to retry fetching a favicon.
+   * Called from popup when a favicon fails to load.
+   * @param domain - The domain to retry favicon for
+   */
+  public async retryFetchFavicon(domain: string): Promise<void> {
+    logger.debug(`Retrying favicon fetch for ${domain}`)
+    await this.fetchAndSaveFavicon(domain)
   }
 }

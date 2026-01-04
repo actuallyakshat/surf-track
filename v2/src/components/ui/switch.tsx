@@ -1,5 +1,5 @@
-import * as React from "react"
 import * as SwitchPrimitives from "@radix-ui/react-switch"
+import * as React from "react"
 
 import { cn } from "~/lib/utils"
 
@@ -13,8 +13,7 @@ const Switch = React.forwardRef<
       className
     )}
     {...props}
-    ref={ref}
-  >
+    ref={ref}>
     <SwitchPrimitives.Thumb
       className={cn(
         "plasmo-pointer-events-none plasmo-block plasmo-h-5 plasmo-w-5 plasmo-rounded-full plasmo-bg-background plasmo-shadow-lg plasmo-ring-0 plasmo-transition-transform data-[state=checked]:plasmo-translate-x-5 data-[state=unchecked]:plasmo-translate-x-0"

@@ -1,14 +1,15 @@
+import { BanIcon, FileText, Home } from "lucide-react"
+import { Link, useLocation } from "react-router-dom"
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from "~/components/ui/tooltip";
-import { BanIcon, Home, FileText } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+  TooltipTrigger
+} from "~/components/ui/tooltip"
 
 export function TopBar() {
-  const { pathname } = useLocation();
+  const { pathname } = useLocation()
 
   return (
     <div className="plasmo-min-h-12 plasmo-border-b plasmo-w-full plasmo-bg-slate-950 plasmo-px-4 plasmo-flex plasmo-items-center plasmo-gap-4">
@@ -18,7 +19,9 @@ export function TopBar() {
             <Link to="/">
               <Home
                 className={`${
-                  pathname === "/" ? "plasmo-text-white" : "plasmo-text-slate-500"
+                  pathname === "/"
+                    ? "plasmo-text-white"
+                    : "plasmo-text-slate-500"
                 } plasmo-size-5`}
               />
             </Link>
@@ -27,13 +30,15 @@ export function TopBar() {
             <p>Dashboard</p>
           </TooltipContent>
         </Tooltip>
-        
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Link to="/blocked">
               <BanIcon
                 className={`${
-                  pathname === "/blocked" ? "plasmo-text-white" : "plasmo-text-slate-500"
+                  pathname === "/blocked"
+                    ? "plasmo-text-white"
+                    : "plasmo-text-slate-500"
                 } plasmo-size-5`}
               />
             </Link>
@@ -48,7 +53,9 @@ export function TopBar() {
             <Link to="/logs">
               <FileText
                 className={`${
-                  pathname === "/logs" ? "plasmo-text-white" : "plasmo-text-slate-500"
+                  pathname === "/logs"
+                    ? "plasmo-text-white"
+                    : "plasmo-text-slate-500"
                 } plasmo-size-5`}
               />
             </Link>
@@ -59,5 +66,5 @@ export function TopBar() {
         </Tooltip>
       </TooltipProvider>
     </div>
-  );
+  )
 }

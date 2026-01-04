@@ -1,5 +1,5 @@
+import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
-import { type VariantProps, cva } from "class-variance-authority"
 
 import { cn } from "~/lib/utils"
 
@@ -8,7 +8,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "plasmo-bg-primary plasmo-text-primary-foreground hover:plasmo-bg-primary/90",
+        default:
+          "plasmo-bg-primary plasmo-text-primary-foreground hover:plasmo-bg-primary/90",
         destructive:
           "plasmo-bg-destructive plasmo-text-destructive-foreground hover:plasmo-bg-destructive/90",
         outline:
@@ -16,19 +17,19 @@ const buttonVariants = cva(
         secondary:
           "plasmo-bg-secondary plasmo-text-secondary-foreground hover:plasmo-bg-secondary/80",
         ghost: "hover:plasmo-bg-accent hover:plasmo-text-accent-foreground",
-        link: "plasmo-text-primary plasmo-underline-offset-4 hover:plasmo-underline",
+        link: "plasmo-text-primary plasmo-underline-offset-4 hover:plasmo-underline"
       },
       size: {
         default: "plasmo-h-10 plasmo-px-4 plasmo-py-2",
         sm: "plasmo-h-9 plasmo-rounded-md plasmo-px-3",
         lg: "plasmo-h-11 plasmo-rounded-md plasmo-px-8",
-        icon: "plasmo-h-10 plasmo-w-10",
-      },
+        icon: "plasmo-h-10 plasmo-w-10"
+      }
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
-    },
+      size: "default"
+    }
   }
 )
 

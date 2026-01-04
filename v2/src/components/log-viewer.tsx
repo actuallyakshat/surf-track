@@ -1,79 +1,82 @@
-import { useEffect, useState } from "react";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Logger } from "../background/logger";
+import { useEffect, useState } from "react"
+
+import { Button } from "~/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card"
+import { TopBar } from "~/components/top-bar"
+
+import { Logger } from "../background/logger"
 
 interface LogEntry {
-  timestamp: number;
-  level: string;
-  source: string;
-  message: string;
-  data?: any;
+  timestamp: number
+  level: string
+  source: string
+  message: string
+  data?: any
 }
 
 export function LogViewer() {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<string>("");
-  const [copySuccess, setCopySuccess] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [filter, setFilter] = useState<string>("")
+  const [copySuccess, setCopySuccess] = useState(false)
 
   const loadLogs = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const allLogs = await Logger.getLogs();
-      setLogs(allLogs);
+      const allLogs = await Logger.getLogs()
+      setLogs(allLogs)
     } catch (err) {
-      console.error("Failed to load logs:", err);
+      console.error("Failed to load logs:", err)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const clearLogs = async () => {
-    await Logger.clearLogs();
-    setLogs([]);
-  };
+    await Logger.clearLogs()
+    setLogs([])
+  }
 
   const exportLogs = async () => {
-    const logsJson = await Logger.exportLogs();
-    const blob = new Blob([logsJson], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `surf-track-logs-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    const logsJson = await Logger.exportLogs()
+    const blob = new Blob([logsJson], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `surf-track-logs-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const copyAllLogs = async () => {
-    const logsToUse = filter ? filteredLogs : logs;
-    
+    const logsToUse = filter ? filteredLogs : logs
+
     const formattedLogs = logsToUse
       .map((log) => {
-        const timestamp = new Date(log.timestamp).toLocaleString();
-        const dataStr = log.data 
+        const timestamp = new Date(log.timestamp).toLocaleString()
+        const dataStr = log.data
           ? `\n  Data: ${JSON.stringify(log.data, null, 2)}`
-          : "";
-        return `[${timestamp}] [${log.level}] [${log.source}] ${log.message}${dataStr}`;
+          : ""
+        return `[${timestamp}] [${log.level}] [${log.source}] ${log.message}${dataStr}`
       })
-      .join("\n\n");
+      .join("\n\n")
 
     try {
-      await navigator.clipboard.writeText(formattedLogs);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
+      await navigator.clipboard.writeText(formattedLogs)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
     } catch (err) {
-      console.error("Failed to copy logs:", err);
-      alert("Failed to copy logs to clipboard");
+      console.error("Failed to copy logs:", err)
+      alert("Failed to copy logs to clipboard")
     }
-  };
+  }
 
   useEffect(() => {
-    loadLogs();
+    loadLogs()
     // Auto-refresh every 2 seconds
-    const interval = setInterval(loadLogs, 2000);
-    return () => clearInterval(interval);
-  }, []);
+    const interval = setInterval(loadLogs, 2000)
+    return () => clearInterval(interval)
+  }, [])
 
   const filteredLogs = filter
     ? logs.filter(
@@ -81,10 +84,13 @@ export function LogViewer() {
           log.message.toLowerCase().includes(filter.toLowerCase()) ||
           log.source.toLowerCase().includes(filter.toLowerCase())
       )
-    : logs;
+    : logs
 
   return (
-    <Card className="plasmo-h-full plasmo-flex plasmo-flex-col">
+    <div className="plasmo-w-full plasmo-h-full">
+      <TopBar />
+      <div className="plasmo-p-4 plasmo-h-[calc(100%-48px)]">
+        <Card className="plasmo-h-full plasmo-flex plasmo-flex-col">
       <CardHeader>
         <CardTitle className="plasmo-flex plasmo-items-center plasmo-justify-between">
           <span>Debug Logs ({filteredLogs.length})</span>
@@ -92,11 +98,10 @@ export function LogViewer() {
             <Button size="sm" variant="outline" onClick={loadLogs}>
               Refresh
             </Button>
-            <Button 
-              size="sm" 
-              variant={copySuccess ? "default" : "outline"} 
-              onClick={copyAllLogs}
-            >
+            <Button
+              size="sm"
+              variant={copySuccess ? "default" : "outline"}
+              onClick={copyAllLogs}>
               {copySuccess ? "Copied!" : "Copy All"}
             </Button>
             <Button size="sm" variant="outline" onClick={exportLogs}>
@@ -127,21 +132,20 @@ export function LogViewer() {
           <div className="plasmo-text-center plasmo-text-muted-foreground">
             No logs found
           </div>
-        ) : (
+         ) : (
           <div className="plasmo-space-y-2">
-            {filteredLogs.map((log, index) => (
+            {[...filteredLogs].reverse().map((log, index) => (
               <div
                 key={index}
                 className={`plasmo-p-2 plasmo-rounded plasmo-text-xs plasmo-font-mono ${
                   log.level === "ERROR"
                     ? "plasmo-bg-destructive/10 plasmo-text-destructive"
                     : log.level === "WARN"
-                    ? "plasmo-bg-yellow-100 plasmo-text-yellow-900"
-                    : log.level === "INFO"
-                    ? "plasmo-bg-blue-50 plasmo-text-blue-900"
-                    : "plasmo-bg-muted plasmo-text-muted-foreground"
-                }`}
-              >
+                      ? "plasmo-bg-yellow-100 plasmo-text-yellow-900"
+                      : log.level === "INFO"
+                        ? "plasmo-bg-blue-50 plasmo-text-blue-900"
+                        : "plasmo-bg-muted plasmo-text-muted-foreground"
+                }`}>
                 <div className="plasmo-flex plasmo-items-start plasmo-gap-2">
                   <span className="plasmo-text-muted-foreground plasmo-whitespace-nowrap">
                     {new Date(log.timestamp).toLocaleTimeString()}
@@ -165,5 +169,7 @@ export function LogViewer() {
         )}
       </CardContent>
     </Card>
-  );
+      </div>
+    </div>
+  )
 }

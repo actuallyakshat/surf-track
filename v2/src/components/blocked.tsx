@@ -1,73 +1,74 @@
-import { useEffect, useState, useMemo } from "react";
-import { Input } from "~/components/ui/input";
-import { Switch } from "~/components/ui/switch";
-import { TopBar } from "~/components/top-bar";
-import { useGlobalContext } from "~/hooks/use-global-context";
-import type { ScreenTimeData } from "~/types";
+import { useEffect, useMemo, useState } from "react"
+
+import { TopBar } from "~/components/top-bar"
+import { Input } from "~/components/ui/input"
+import { Switch } from "~/components/ui/switch"
+import { useGlobalContext } from "~/hooks/use-global-context"
+import type { ScreenTimeData } from "~/types"
 
 type DomainData = {
-  domain: string;
-  favicon?: string;
-};
+  domain: string
+  favicon?: string
+}
 
 function extractAllDomains(
   screenTimeData: ScreenTimeData | null
 ): DomainData[] {
-  if (!screenTimeData) return [];
+  if (!screenTimeData) return []
 
-  const domainSet = new Set<string>();
-  const domains: DomainData[] = [];
+  const domainSet = new Set<string>()
+  const domains: DomainData[] = []
 
   Object.values(screenTimeData).forEach((weekData) => {
     Object.values(weekData).forEach((dailyData) => {
       Object.entries(dailyData).forEach(([domain, data]) => {
-        if (!domain || domainSet.has(domain)) return;
-        domainSet.add(domain);
-        domains.push({ domain, favicon: data.favicon });
-      });
-    });
-  });
+        if (!domain || domainSet.has(domain)) return
+        domainSet.add(domain)
+        domains.push({ domain, favicon: data.favicon })
+      })
+    })
+  })
 
-  return domains.sort((a, b) => a.domain.localeCompare(b.domain));
+  return domains.sort((a, b) => a.domain.localeCompare(b.domain))
 }
 
 export function Blocked() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const { screenTimeData } = useGlobalContext();
-  const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("")
+  const { screenTimeData } = useGlobalContext()
+  const [blockedDomains, setBlockedDomains] = useState<string[]>([])
 
   // Load all domains
   const allDomains = useMemo(() => {
-    return extractAllDomains(screenTimeData);
-  }, [screenTimeData]);
+    return extractAllDomains(screenTimeData)
+  }, [screenTimeData])
 
   // Filter domains
   const filteredDomains = useMemo(() => {
     return allDomains.filter((domain) =>
       domain.domain.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery, allDomains]);
+    )
+  }, [searchQuery, allDomains])
 
   // Load blocked domains
   useEffect(() => {
     const loadBlockedDomains = async () => {
-      const result = await chrome.storage.local.get("blockedDomains");
+      const result = await chrome.storage.local.get("blockedDomains")
       if (result && result.blockedDomains) {
-        setBlockedDomains(result.blockedDomains);
+        setBlockedDomains(result.blockedDomains)
       }
-    };
-    loadBlockedDomains();
-  }, []);
+    }
+    loadBlockedDomains()
+  }, [])
 
   // Handle block/unblock
   const handleBlock = async (domain: string, checked: boolean) => {
     const newBlockedDomains = checked
       ? [...blockedDomains, domain]
-      : blockedDomains.filter((d) => d !== domain);
+      : blockedDomains.filter((d) => d !== domain)
 
-    await chrome.storage.local.set({ blockedDomains: newBlockedDomains });
-    setBlockedDomains(newBlockedDomains);
-  };
+    await chrome.storage.local.set({ blockedDomains: newBlockedDomains })
+    setBlockedDomains(newBlockedDomains)
+  }
 
   return (
     <div className="plasmo-w-full plasmo-h-full">
@@ -95,8 +96,7 @@ export function Blocked() {
                 {filteredDomains.map((domain) => (
                   <div
                     key={domain.domain}
-                    className="plasmo-flex plasmo-items-center plasmo-justify-between plasmo-py-3"
-                  >
+                    className="plasmo-flex plasmo-items-center plasmo-justify-between plasmo-py-3">
                     <div className="plasmo-flex plasmo-items-center plasmo-min-w-0 plasmo-flex-1 plasmo-gap-3">
                       {domain.favicon ? (
                         <img
@@ -104,18 +104,26 @@ export function Blocked() {
                           className="plasmo-size-8 plasmo-rounded-sm"
                           alt=""
                           onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = "none";
+                            ;(e.target as HTMLImageElement).style.display =
+                              "none"
+                            chrome.runtime.sendMessage({
+                              type: "RETRY_FAVICON",
+                              domain: domain.domain
+                            })
                           }}
                         />
                       ) : (
-                        <div className="plasmo-size-8 plasmo-rounded-sm plasmo-bg-muted plasmo-flex plasmo-items-center plasmo-justify-center plasmo-text-xs plasmo-font-medium plasmo-text-muted-foreground">
+                        <div className="plasmo-size-8 plasmo-rounded-sm plasmo-gradient-to-br plasmo-from-slate-200 plasmo-to-slate-300 dark:plasmo-from-slate-700 dark:plasmo-to-slate-800 plasmo-flex plasmo-items-center plasmo-justify-center plasmo-text-sm plasmo-font-semibold plasmo-text-slate-600 dark:plasmo-text-slate-300 plasmo-shadow-sm">
                           {domain.domain.charAt(0).toUpperCase()}
                         </div>
                       )}
                       <button
-                        onClick={() => chrome.tabs.create({ url: `https://${domain.domain}` })}
-                        className="hover:plasmo-underline plasmo-truncate plasmo-text-left plasmo-font-medium"
-                      >
+                        onClick={() =>
+                          chrome.tabs.create({
+                            url: `https://${domain.domain}`
+                          })
+                        }
+                        className="hover:plasmo-underline plasmo-truncate plasmo-text-left plasmo-font-medium">
                         {domain.domain}
                       </button>
                     </div>
@@ -141,5 +149,5 @@ export function Blocked() {
         </div>
       </div>
     </div>
-  );
+  )
 }

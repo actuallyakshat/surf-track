@@ -1,4 +1,5 @@
 import React, { createContext, useEffect, useState } from "react"
+
 import type { ScreenTimeData } from "~/types"
 
 interface GlobalContextValue {
@@ -65,7 +66,9 @@ export function GlobalProvider({ children }: GlobalProviderProps) {
         setBlockedDomains(result.blockedDomains || [])
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load data from storage"
+          err instanceof Error
+            ? err.message
+            : "Failed to load data from storage"
         )
         console.error("Error loading initial data:", err)
       } finally {

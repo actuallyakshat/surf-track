@@ -1,5 +1,5 @@
-import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react"
 
 import { cn } from "~/lib/utils"
 
@@ -10,12 +10,12 @@ const alertVariants = cva(
       variant: {
         default: "plasmo-bg-background plasmo-text-foreground",
         destructive:
-          "plasmo-border-destructive/50 plasmo-text-destructive dark:plasmo-border-destructive [&>svg]:plasmo-text-destructive",
-      },
+          "plasmo-border-destructive/50 plasmo-text-destructive dark:plasmo-border-destructive [&>svg]:plasmo-text-destructive"
+      }
     },
     defaultVariants: {
-      variant: "default",
-    },
+      variant: "default"
+    }
   }
 )
 
@@ -38,7 +38,10 @@ const AlertTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h5
     ref={ref}
-    className={cn("plasmo-mb-1 plasmo-font-medium plasmo-leading-none plasmo-tracking-tight", className)}
+    className={cn(
+      "plasmo-mb-1 plasmo-font-medium plasmo-leading-none plasmo-tracking-tight",
+      className
+    )}
     {...props}
   />
 ))

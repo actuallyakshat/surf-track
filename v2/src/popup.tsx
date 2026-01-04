@@ -1,8 +1,9 @@
 import { MemoryRouter, Route, Routes } from "react-router-dom"
-import { ErrorBoundary } from "~/components/error-boundary"
-import { Dashboard } from "~/components/dashboard"
-import { LogViewer } from "~/components/log-viewer"
+
 import { Blocked } from "~/components/blocked"
+import { Dashboard } from "~/components/dashboard"
+import { ErrorBoundary } from "~/components/error-boundary"
+import { LogViewer } from "~/components/log-viewer"
 import { GlobalProvider } from "~/context/global-context"
 
 import "~style.css"

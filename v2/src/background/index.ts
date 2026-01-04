@@ -1,6 +1,6 @@
 /**
  * Main Service Worker for Surf Track Chrome Extension
- * 
+ *
  * This file serves as the entry point for the background service worker.
  * It initializes all tracking services and sets up event listeners for:
  * - Tab changes and URL updates
@@ -10,20 +10,20 @@
  * - Idle state detection
  */
 
-import { StorageManager } from './storage-manager';
-import { IdleDetector } from './idle-detector';
-import { DataArchiver } from './data-archiver';
-import { TrackingEngine } from './tracking-engine';
-import { ALARM_NAMES } from '../lib/constants';
-import { Logger } from './logger';
+import { ALARM_NAMES } from "../lib/constants"
+import { DataArchiver } from "./data-archiver"
+import { IdleDetector } from "./idle-detector"
+import { Logger } from "./logger"
+import { StorageManager } from "./storage-manager"
+import { TrackingEngine } from "./tracking-engine"
 
-const logger = new Logger('ServiceWorker');
+const logger = new Logger("ServiceWorker")
 
 // Initialize service instances
-const storageManager = StorageManager.getInstance();
-const trackingEngine = new TrackingEngine(storageManager);
-const idleDetector = IdleDetector.getInstance();
-const dataArchiver = DataArchiver.getInstance();
+const storageManager = StorageManager.getInstance()
+const trackingEngine = new TrackingEngine(storageManager)
+const idleDetector = IdleDetector.getInstance()
+const dataArchiver = DataArchiver.getInstance()
 
 /**
  * Service Worker Initialization
@@ -31,32 +31,32 @@ const dataArchiver = DataArchiver.getInstance();
  */
 async function initializeServiceWorker() {
   try {
-    logger.info('Initializing service worker');
+    logger.info("Initializing service worker")
 
     // Start idle detector with callback
     idleDetector.start({
       onStateChange: (isIdle: boolean) => {
-        logger.info('Idle state changed', { isIdle });
-        trackingEngine.handleIdleState(isIdle).catch(error => {
-          logger.error('Error handling idle state change', error);
-        });
+        logger.info("Idle state changed", { isIdle })
+        trackingEngine.handleIdleState(isIdle).catch((error) => {
+          logger.error("Error handling idle state change", error)
+        })
       }
-    });
+    })
 
     // Resume tracking from previous state
-    await trackingEngine.resume();
+    await trackingEngine.resume()
 
     // Start data archiver (sets up daily archiving alarm)
-    dataArchiver.start();
+    dataArchiver.start()
 
-    logger.info('Service worker initialized successfully');
+    logger.info("Service worker initialized successfully")
   } catch (error) {
-    logger.error('Failed to initialize service worker', error);
+    logger.error("Failed to initialize service worker", error)
   }
 }
 
 // Kick off initialization
-initializeServiceWorker();
+initializeServiceWorker()
 
 /**
  * Extension Installation Handler
@@ -64,24 +64,24 @@ initializeServiceWorker();
  */
 chrome.runtime.onInstalled.addListener(async (details) => {
   try {
-    logger.info('Extension installed/updated', { reason: details.reason });
-    
+    logger.info("Extension installed/updated", { reason: details.reason })
+
     // Initialize tracking engine from clean slate
-    await trackingEngine.initialize();
-    
-    logger.info('onInstalled handling complete');
+    await trackingEngine.initialize()
+
+    logger.info("onInstalled handling complete")
   } catch (error) {
-    logger.error('Error during installation', error);
+    logger.error("Error during installation", error)
   }
-});
+})
 
 /**
  * Browser Startup Handler
  * Runs when Chrome starts
  */
 chrome.runtime.onStartup.addListener(async () => {
-  logger.info('Browser startup detected');
-});
+  logger.info("Browser startup detected")
+})
 
 /**
  * Tab Activation Handler
@@ -89,12 +89,18 @@ chrome.runtime.onStartup.addListener(async () => {
  */
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   try {
-    logger.debug('Tab activated', { tabId: activeInfo.tabId, windowId: activeInfo.windowId });
-    await trackingEngine.handleTabActivated(activeInfo.tabId, activeInfo.windowId);
+    logger.debug("Tab activated", {
+      tabId: activeInfo.tabId,
+      windowId: activeInfo.windowId
+    })
+    await trackingEngine.handleTabActivated(
+      activeInfo.tabId,
+      activeInfo.windowId
+    )
   } catch (error) {
-    logger.error('Error handling tab activation', error);
+    logger.error("Error handling tab activation", error)
   }
-});
+})
 
 /**
  * Tab Update Handler
@@ -104,17 +110,25 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   try {
     // Process when URL is available (covers navigation start and finish)
     if (changeInfo.url) {
-      logger.debug('Tab URL updated', { tabId, url: changeInfo.url, windowId: tab.windowId });
-      await trackingEngine.handleUrlChange(tabId, changeInfo.url, tab.windowId);
-    } else if (changeInfo.status === 'complete' && tab.url) {
+      logger.debug("Tab URL updated", {
+        tabId,
+        url: changeInfo.url,
+        windowId: tab.windowId
+      })
+      await trackingEngine.handleUrlChange(tabId, changeInfo.url, tab.windowId)
+    } else if (changeInfo.status === "complete" && tab.url) {
       // Also catch complete status if we missed the URL change
-      logger.debug('Tab load complete', { tabId, url: tab.url, windowId: tab.windowId });
-      await trackingEngine.handleUrlChange(tabId, tab.url, tab.windowId);
+      logger.debug("Tab load complete", {
+        tabId,
+        url: tab.url,
+        windowId: tab.windowId
+      })
+      await trackingEngine.handleUrlChange(tabId, tab.url, tab.windowId)
     }
   } catch (error) {
-    logger.error('Error handling tab update', error);
+    logger.error("Error handling tab update", error)
   }
-});
+})
 
 /**
  * Window Focus Change Handler
@@ -122,11 +136,11 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
  */
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
   try {
-    await trackingEngine.handleWindowFocusChange(windowId);
+    await trackingEngine.handleWindowFocusChange(windowId)
   } catch (error) {
-    logger.error('Error handling window focus change', error);
+    logger.error("Error handling window focus change", error)
   }
-});
+})
 
 /**
  * Alarm Handler
@@ -136,13 +150,32 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   try {
     // Periodic save alarm (fires every 15 seconds)
     if (alarm.name === ALARM_NAMES.SAVE_DATA) {
-      await trackingEngine.saveCurrentSession();
-      return;
+      await trackingEngine.saveCurrentSession()
+      return
     }
   } catch (error) {
-    logger.error(`Error handling alarm '${alarm.name}'`, error);
+    logger.error(`Error handling alarm '${alarm.name}'`, error)
   }
-});
+})
 
-logger.info('Service worker script loaded');
+/**
+ * Message Handler
+ * Processes messages from popup and content scripts
+ */
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "RETRY_FAVICON") {
+    const { domain } = message
+    if (domain) {
+      trackingEngine
+        .retryFetchFavicon(domain)
+        .then(() => {
+          logger.info(`Favicon retry initiated for ${domain}`)
+        })
+        .catch((error) => {
+          logger.error(`Failed to retry favicon for ${domain}`, error)
+        })
+    }
+  }
+})
 
+logger.info("Service worker script loaded")

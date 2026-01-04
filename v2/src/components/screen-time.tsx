@@ -1,30 +1,31 @@
-import { useState } from "react";
-import { useGlobalContext } from "~/hooks/use-global-context";
-import { getTodayDate } from "~/lib/time-utils";
-import { LoadingState } from "~/components/loading-state";
-import { Alert } from "~/components/ui/alert";
-import { ScreenTimeChart } from "~/components/screen-time-chart";
-import { DailyBreakdown } from "~/components/daily-breakdown";
+import { useState } from "react"
+
+import { DailyBreakdown } from "~/components/daily-breakdown"
+import { LoadingState } from "~/components/loading-state"
+import { ScreenTimeChart } from "~/components/screen-time-chart"
+import { Alert } from "~/components/ui/alert"
+import { useGlobalContext } from "~/hooks/use-global-context"
+import { getTodayDate } from "~/lib/time-utils"
 
 export function ScreenTime() {
-  const { screenTimeData, isLoading, error } = useGlobalContext();
-  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
+  const { screenTimeData, isLoading, error } = useGlobalContext()
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate())
 
   // Navigate week
   const handleNavigateWeek = (direction: "prev" | "next") => {
-    const date = new Date(selectedDate);
-    date.setDate(date.getDate() + (direction === "next" ? 7 : -7));
-    setSelectedDate(date.toISOString().split("T")[0]);
-  };
+    const date = new Date(selectedDate)
+    date.setDate(date.getDate() + (direction === "next" ? 7 : -7))
+    setSelectedDate(date.toISOString().split("T")[0])
+  }
 
   // Handle date selection from chart
   const handleDateSelect = (date: string) => {
-    setSelectedDate(date);
-  };
+    setSelectedDate(date)
+  }
 
   // Show loading state
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState />
   }
 
   // Show error state
@@ -36,7 +37,7 @@ export function ScreenTime() {
           <div className="plasmo-text-sm">{error}</div>
         </Alert>
       </div>
-    );
+    )
   }
 
   return (
@@ -59,5 +60,5 @@ export function ScreenTime() {
         />
       </div>
     </div>
-  );
+  )
 }
