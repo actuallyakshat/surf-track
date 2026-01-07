@@ -1,4 +1,4 @@
-import { BanIcon, FileText, Home } from "lucide-react"
+import { BanIcon, FileText, Home, Trash2 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
 import {
@@ -62,6 +62,23 @@ export function TopBar() {
           </TooltipTrigger>
           <TooltipContent>
             <p>System Logs</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link to="/reset">
+              <Trash2
+                className={`${
+                  pathname === "/reset"
+                    ? "plasmo-text-white"
+                    : "plasmo-text-slate-500"
+                } plasmo-size-5`}
+              />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Reset Data</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
