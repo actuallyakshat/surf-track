@@ -117,15 +117,9 @@ export function Blocked() {
                           {domain.domain.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <button
-                        onClick={() =>
-                          chrome.tabs.create({
-                            url: `https://${domain.domain}`
-                          })
-                        }
-                        className="hover:plasmo-underline plasmo-truncate plasmo-text-left plasmo-font-medium">
+                      <span className="plasmo-truncate plasmo-text-left plasmo-font-medium">
                         {domain.domain}
-                      </button>
+                      </span>
                     </div>
                     <div className="plasmo-flex-shrink-0">
                       <Switch

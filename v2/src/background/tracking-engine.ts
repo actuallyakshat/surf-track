@@ -1,4 +1,8 @@
-import { ALARM_NAMES } from "../lib/constants"
+import {
+  ALARM_NAMES,
+  MAX_RESUME_GAP_MS,
+  MAX_SESSION_DURATION_SECONDS
+} from "../lib/constants"
 import { getDomainFromUrl, isIgnoredDomain } from "../lib/domain-utils"
 import type { TrackingState } from "../types"
 import { Logger } from "./logger"
@@ -40,6 +44,7 @@ export class TrackingEngine {
   /**
    * Resumes tracking after a service worker restart.
    * Restores previous tracking state if it was active and ensures periodic save alarm exists.
+   * Detects system suspend by checking the gap since lastActiveTime.
    */
   async resume(): Promise<void> {
     try {
@@ -49,17 +54,33 @@ export class TrackingEngine {
       const trackingState = await this.storageManager.getTrackingState()
       logger.debug("Current tracking state", trackingState)
 
-      // If tracking was active, continue tracking
+      // If tracking was active, check if we should resume or reset
       if (trackingState?.currentUrl && trackingState?.startTime) {
-        logger.info("Resuming tracking", {
-          url: trackingState.currentUrl,
-          startTime: new Date(trackingState.startTime).toISOString()
-        })
+        const now = Date.now()
+        const lastActive =
+          trackingState.lastActiveTime || trackingState.startTime
+        const gapMs = now - lastActive
 
-        // Update lastActiveTime to current timestamp to mark as active
-        await this.storageManager.updateTrackingState({
-          lastActiveTime: Date.now()
-        })
+        // If gap is too large, assume system was suspended (sleep/hibernate)
+        // Don't count the elapsed time - reset and start fresh
+        if (gapMs > MAX_RESUME_GAP_MS) {
+          logger.warn(
+            `Large gap detected (${Math.round(gapMs / 1000)}s), assuming system suspend - resetting tracking`
+          )
+          await this.resetTrackingState()
+          await this.startTrackingActiveTab()
+        } else {
+          logger.info("Resuming tracking", {
+            url: trackingState.currentUrl,
+            startTime: new Date(trackingState.startTime).toISOString(),
+            gapMs
+          })
+
+          // Update lastActiveTime to current timestamp to mark as active
+          await this.storageManager.updateTrackingState({
+            lastActiveTime: now
+          })
+        }
       } else {
         logger.info("No active tracking to resume, starting fresh")
         // Start tracking the current active tab
@@ -105,6 +126,11 @@ export class TrackingEngine {
       }
 
       const domain = getDomainFromUrl(activeTab.url)
+
+      // Check if domain is blocked - if so, close the tab
+      if (await this.checkAndHandleBlockedDomain(activeTab.id!, domain)) {
+        return
+      }
 
       // Check if domain should be ignored
       if (isIgnoredDomain(domain)) {
@@ -176,11 +202,22 @@ export class TrackingEngine {
   /**
    * Handles tab activation when user switches to a different tab.
    * Saves current session before switching and starts tracking the new tab.
+   * Only tracks if the window is actually focused (Chrome is in foreground).
    * @param tabId - The ID of the activated tab
    * @param windowId - The ID of the window containing the tab
    */
   async handleTabActivated(tabId: number, windowId: number): Promise<void> {
     try {
+      // Check if the window containing this tab is actually focused
+      // This prevents tracking when Chrome is in the background
+      const window = await chrome.windows.get(windowId)
+      if (!window.focused) {
+        logger.debug("Ignoring tab activation in unfocused window", {
+          windowId
+        })
+        return
+      }
+
       // Save current session before switching
       await this.saveCurrentSession()
 
@@ -193,6 +230,11 @@ export class TrackingEngine {
       }
 
       const domain = getDomainFromUrl(tab.url)
+
+      // Check if domain is blocked - if so, close the tab
+      if (await this.checkAndHandleBlockedDomain(tabId, domain)) {
+        return
+      }
 
       // Check if domain should be ignored
       if (isIgnoredDomain(domain)) {
@@ -236,6 +278,11 @@ export class TrackingEngine {
       await this.saveCurrentSession()
 
       const domain = getDomainFromUrl(url)
+
+      // Check if domain is blocked - if so, close the tab
+      if (await this.checkAndHandleBlockedDomain(tabId, domain)) {
+        return
+      }
 
       // Check if domain should be ignored
       if (isIgnoredDomain(domain)) {
@@ -284,11 +331,20 @@ export class TrackingEngine {
         return
       }
 
-      const elapsedSeconds = Math.floor(elapsedMs / 1000)
+      let elapsedSeconds = Math.floor(elapsedMs / 1000)
 
       // Only save if there's meaningful time (at least 1 second)
       if (elapsedSeconds < 1) {
         return
+      }
+
+      // Sanity check: cap session duration to prevent unrealistic accumulation
+      // This protects against edge cases like system sleep where alarm didn't fire
+      if (elapsedSeconds > MAX_SESSION_DURATION_SECONDS) {
+        logger.warn(
+          `Session duration ${elapsedSeconds}s exceeds max ${MAX_SESSION_DURATION_SECONDS}s, capping`
+        )
+        elapsedSeconds = MAX_SESSION_DURATION_SECONDS
       }
 
       const domain = getDomainFromUrl(trackingState.currentUrl)
@@ -457,5 +513,50 @@ export class TrackingEngine {
   public async retryFetchFavicon(domain: string): Promise<void> {
     logger.debug(`Retrying favicon fetch for ${domain}`)
     await this.fetchAndSaveFavicon(domain)
+  }
+
+  /**
+   * Checks if a domain is blocked and handles closing the tab if needed.
+   * @param tabId - The ID of the tab to check
+   * @param domain - The domain to check
+   * @returns True if the domain was blocked and tab was closed, false otherwise
+   */
+  private async checkAndHandleBlockedDomain(
+    tabId: number,
+    domain: string
+  ): Promise<boolean> {
+    const isBlocked = await this.storageManager.isBlocked(domain)
+    if (isBlocked) {
+      logger.info("Blocked domain detected, closing tab:", { domain })
+      await this.closeBlockedTab(tabId)
+      return true
+    }
+    return false
+  }
+
+  /**
+   * Closes a blocked tab. If it's the only tab open, creates a new tab first.
+   * @param tabId - The ID of the tab to close
+   */
+  private async closeBlockedTab(tabId: number): Promise<void> {
+    try {
+      // Get all tabs across all windows
+      const allTabs = await chrome.tabs.query({})
+
+      // If this is the only tab, create a new tab first
+      if (allTabs.length === 1) {
+        logger.info("Only one tab open, creating new tab before closing blocked tab")
+        await chrome.tabs.create({ url: "chrome://newtab" })
+      }
+
+      // Close the blocked tab
+      await chrome.tabs.remove(tabId)
+      logger.info("Blocked tab closed successfully")
+
+      // Reset tracking state since we closed a tab
+      await this.resetTrackingState()
+    } catch (error) {
+      logger.error("Failed to close blocked tab", error)
+    }
   }
 }

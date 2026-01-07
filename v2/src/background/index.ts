@@ -105,9 +105,15 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 /**
  * Tab Update Handler
  * Fires when a tab's URL changes or page finishes loading
+ * Only processes active tabs to avoid tracking background tab navigations
  */
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   try {
+    // Only process active tabs - ignore background tab navigations
+    if (!tab.active) {
+      return
+    }
+
     // Process when URL is available (covers navigation start and finish)
     if (changeInfo.url) {
       logger.debug("Tab URL updated", {

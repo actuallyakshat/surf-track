@@ -13,6 +13,7 @@ const logger = new Logger("DataArchiver")
 export class DataArchiver {
   private static instance: DataArchiver
   private isRunning = false
+  private alarmHandler: ((alarm: chrome.alarms.Alarm) => void) | null = null
 
   private constructor() {}
 
@@ -33,6 +34,12 @@ export class DataArchiver {
   stop(): void {
     this.isRunning = false
     chrome.alarms.clear(ARCHIVE_ALARM_NAME)
+
+    // Remove the alarm listener to prevent stacking
+    if (this.alarmHandler && chrome.alarms?.onAlarm) {
+      chrome.alarms.onAlarm.removeListener(this.alarmHandler)
+      this.alarmHandler = null
+    }
   }
 
   scheduleArchiving(): void {
@@ -43,13 +50,21 @@ export class DataArchiver {
   }
 
   private setupAlarmListener(): void {
-    chrome.alarms.onAlarm.addListener((alarm) => {
+    // Remove existing listener if any to prevent stacking
+    if (this.alarmHandler && chrome.alarms?.onAlarm) {
+      chrome.alarms.onAlarm.removeListener(this.alarmHandler)
+    }
+
+    // Create and store the handler reference for later removal
+    this.alarmHandler = (alarm: chrome.alarms.Alarm) => {
       if (alarm.name === ARCHIVE_ALARM_NAME) {
         this.archiveOldData().catch((error) => {
           logger.error("Failed to archive data", error)
         })
       }
-    })
+    }
+
+    chrome.alarms.onAlarm.addListener(this.alarmHandler)
   }
 
   async archiveOldData(): Promise<{ archived: number; errors: string[] }> {

@@ -11,7 +11,12 @@ import {
 
 import { Card, CardContent, CardFooter } from "~/components/ui/card"
 import { aggregateWeekData } from "~/lib/data-transformations"
-import { formatDateShort, formatSeconds, getYearWeek } from "~/lib/time-utils"
+import {
+  formatDateShort,
+  formatSeconds,
+  getLocalDateKey,
+  getYearWeek
+} from "~/lib/time-utils"
 import type { ScreenTimeData } from "~/types"
 
 interface ScreenTimeChartProps {
@@ -52,7 +57,8 @@ export function ScreenTimeChart({
     for (let i = 0; i < 7; i++) {
       const date = new Date(monday)
       date.setDate(monday.getDate() + i)
-      const dateStr = date.toISOString().split("T")[0]
+      // Use local date key to avoid timezone shifts (e.g. UTC-1 shift)
+      const dateStr = getLocalDateKey(date)
 
       // Get year-week for each date to fetch data accurately
       const yearWeek = getYearWeek(date)

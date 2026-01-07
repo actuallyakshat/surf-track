@@ -28,7 +28,14 @@ export function getYearWeek(date: Date = new Date()): string {
 }
 
 export function getTodayDate(): string {
-  const date = new Date()
+  return getLocalDateKey(new Date())
+}
+
+/**
+ * Returns the date key (YYYY-MM-DD) for a given local date object.
+ * Uses local time components to avoid timezone shifting issues that occur with toISOString().
+ */
+export function getLocalDateKey(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, "0")
   const day = String(date.getDate()).padStart(2, "0")

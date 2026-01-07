@@ -5,7 +5,7 @@ import { LoadingState } from "~/components/loading-state"
 import { ScreenTimeChart } from "~/components/screen-time-chart"
 import { Alert } from "~/components/ui/alert"
 import { useGlobalContext } from "~/hooks/use-global-context"
-import { getTodayDate } from "~/lib/time-utils"
+import { getLocalDateKey, getTodayDate } from "~/lib/time-utils"
 
 export function ScreenTime() {
   const { screenTimeData, isLoading, error } = useGlobalContext()
@@ -13,9 +13,10 @@ export function ScreenTime() {
 
   // Navigate week
   const handleNavigateWeek = (direction: "prev" | "next") => {
-    const date = new Date(selectedDate)
+    // Treat selectedDate as local midnight to ensure consistent math
+    const date = new Date(selectedDate + "T00:00:00")
     date.setDate(date.getDate() + (direction === "next" ? 7 : -7))
-    setSelectedDate(date.toISOString().split("T")[0])
+    setSelectedDate(getLocalDateKey(date))
   }
 
   // Handle date selection from chart

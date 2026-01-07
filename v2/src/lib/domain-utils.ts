@@ -1,13 +1,9 @@
-export const DEFAULT_IGNORED_DOMAINS = [
-  "newtab",
-  "extensions",
-  "localhost",
-  "settings",
-  "about:blank",
-  "chrome://extensions",
-  "chrome://newtab",
-  "chrome://settings"
-]
+import { IGNORED_DOMAINS } from "./constants"
+
+/**
+ * @deprecated Use IGNORED_DOMAINS from constants.ts instead
+ */
+export const DEFAULT_IGNORED_DOMAINS = IGNORED_DOMAINS as unknown as string[]
 
 /**
  * Extracts the hostname from a given URL string.
