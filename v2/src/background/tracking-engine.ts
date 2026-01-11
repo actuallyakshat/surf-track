@@ -155,43 +155,60 @@ export class TrackingEngine {
 
   /**
    * Handles idle state changes.
-   * Called when user becomes idle or active again.
-   * @param isIdle - True if user is now idle, false if user is now active
+   * Called when user becomes idle, locked, or active again.
+   *
+   * IMPORTANT: We only pause tracking when the screen is LOCKED (user truly away).
+   * We continue tracking during "idle" state (no input) because the user may be:
+   * - Watching videos
+   * - Reading long articles
+   * - On a video call
+   *
+   * Window/tab focus changes already handle "user switched to another app".
+   *
+   * @param state - The idle state: "active", "idle", or "locked"
    */
-  async handleIdleState(isIdle: boolean): Promise<void> {
+  async handleIdleState(state: "active" | "idle" | "locked"): Promise<void> {
     try {
       const trackingState = await this.storageManager.getTrackingState()
 
-      if (isIdle) {
-        logger.info("User is now idle, saving session")
-        // Save current session before going idle
+      if (state === "locked") {
+        // Screen is locked - user is truly away, stop tracking
+        logger.info("Screen locked, saving session and pausing tracking")
         await this.saveCurrentSession()
-
-        // Update state to mark as idle (preserve other state for resume)
         await this.storageManager.updateTrackingState({
           isIdle: true
         })
+      } else if (state === "idle") {
+        // User is idle (no input) but may still be consuming content
+        // Continue tracking - this is intentional for video/reading scenarios
+        logger.debug("User idle (no input) - continuing to track")
+        // Update lastActiveTime to prevent stale state detection on resume
+        await this.storageManager.updateTrackingState({
+          lastActiveTime: Date.now()
+        })
       } else {
-        logger.info("User is now active")
-
-        // If there was a currentUrl being tracked before idle, resume tracking
-        if (trackingState?.currentUrl) {
-          const now = Date.now()
-          await this.storageManager.updateTrackingState({
-            isIdle: false,
-            startTime: now,
-            lastActiveTime: now
-          })
-          logger.info("Resumed tracking after idle:", {
-            url: trackingState.currentUrl
-          })
-        } else {
-          // No previous tracking, just mark as not idle and start tracking active tab
-          await this.storageManager.updateTrackingState({
-            isIdle: false
-          })
-          await this.startTrackingActiveTab()
+        // User is active
+        if (trackingState?.isIdle) {
+          logger.info("User active after being locked, resuming tracking")
+          // Was locked (truly away), now active - resume tracking
+          if (trackingState.currentUrl) {
+            const now = Date.now()
+            await this.storageManager.updateTrackingState({
+              isIdle: false,
+              startTime: now,
+              lastActiveTime: now
+            })
+            logger.info("Resumed tracking after lock:", {
+              url: trackingState.currentUrl
+            })
+          } else {
+            await this.storageManager.updateTrackingState({
+              isIdle: false
+            })
+            await this.startTrackingActiveTab()
+          }
         }
+        // If wasn't locked, nothing to do - already tracking
       }
     } catch (error) {
       logger.error("Failed to handle idle state change", error)

@@ -35,9 +35,9 @@ async function initializeServiceWorker() {
 
     // Start idle detector with callback
     idleDetector.start({
-      onStateChange: (isIdle: boolean) => {
-        logger.info("Idle state changed", { isIdle })
-        trackingEngine.handleIdleState(isIdle).catch((error) => {
+      onStateChange: (state: "active" | "idle" | "locked") => {
+        logger.info("Idle state changed", { state })
+        trackingEngine.handleIdleState(state).catch((error) => {
           logger.error("Error handling idle state change", error)
         })
       }

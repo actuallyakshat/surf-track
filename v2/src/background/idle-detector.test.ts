@@ -186,7 +186,7 @@ describe("IdleDetector", () => {
 
       vi.advanceTimersByTime(300)
 
-      expect(mockOnStateChange).toHaveBeenCalledWith(true)
+      expect(mockOnStateChange).toHaveBeenCalledWith("idle")
       expect(mockOnStateChange).toHaveBeenCalledTimes(1)
     })
 
@@ -201,11 +201,11 @@ describe("IdleDetector", () => {
       listener("active")
       vi.advanceTimersByTime(300)
 
-      expect(mockOnStateChange).toHaveBeenCalledWith(false)
+      expect(mockOnStateChange).toHaveBeenCalledWith("active")
       expect(mockOnStateChange).toHaveBeenCalledTimes(1)
     })
 
-    it("should treat locked state as idle", () => {
+    it("should pass locked state to callback", () => {
       idleDetector.start(mockCallbacks)
 
       const listener = stateChangeListeners[0]
@@ -213,10 +213,10 @@ describe("IdleDetector", () => {
 
       vi.advanceTimersByTime(300)
 
-      expect(mockOnStateChange).toHaveBeenCalledWith(true)
+      expect(mockOnStateChange).toHaveBeenCalledWith("locked")
     })
 
-    it("should not call callback when transitioning from idle to locked", () => {
+    it("should call callback when transitioning from idle to locked", () => {
       idleDetector.start(mockCallbacks)
 
       const listener = stateChangeListeners[0]
@@ -227,10 +227,10 @@ describe("IdleDetector", () => {
       listener("locked")
       vi.advanceTimersByTime(300)
 
-      expect(mockOnStateChange).not.toHaveBeenCalled()
+      expect(mockOnStateChange).toHaveBeenCalledWith("locked")
     })
 
-    it("should not call callback when transitioning from locked to idle", () => {
+    it("should call callback when transitioning from locked to idle", () => {
       idleDetector.start(mockCallbacks)
 
       const listener = stateChangeListeners[0]
@@ -241,10 +241,10 @@ describe("IdleDetector", () => {
       listener("idle")
       vi.advanceTimersByTime(300)
 
-      expect(mockOnStateChange).not.toHaveBeenCalled()
+      expect(mockOnStateChange).toHaveBeenCalledWith("idle")
     })
 
-    it("should debounce rapid state changes", () => {
+    it("should debounce rapid state changes and use final state", () => {
       idleDetector.start(mockCallbacks)
 
       const listener = stateChangeListeners[0]
@@ -255,7 +255,7 @@ describe("IdleDetector", () => {
       listener("idle")
       vi.advanceTimersByTime(300)
 
-      expect(mockOnStateChange).toHaveBeenCalledWith(true)
+      expect(mockOnStateChange).toHaveBeenCalledWith("idle")
       expect(mockOnStateChange).toHaveBeenCalledTimes(1)
     })
 
@@ -294,7 +294,7 @@ describe("IdleDetector", () => {
 
       vi.advanceTimersByTime(300)
 
-      expect(secondCallback).toHaveBeenCalledWith(true)
+      expect(secondCallback).toHaveBeenCalledWith("idle")
       expect(firstCallback).not.toHaveBeenCalled()
     })
 
@@ -309,7 +309,7 @@ describe("IdleDetector", () => {
       listener("idle")
       vi.advanceTimersByTime(300)
 
-      expect(mockOnStateChange).toHaveBeenCalledWith(true)
+      expect(mockOnStateChange).toHaveBeenCalledWith("idle")
     })
   })
 })

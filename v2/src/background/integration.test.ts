@@ -273,10 +273,10 @@ describe("Background Services Integration Tests", () => {
       })
 
       // 3. Start idle detection
-      const idleStateChanges: boolean[] = []
+      const idleStateChanges: string[] = []
       idleDetector.start({
-        onStateChange: (isIdle) => {
-          idleStateChanges.push(isIdle)
+        onStateChange: (state) => {
+          idleStateChanges.push(state)
         }
       })
 
@@ -305,7 +305,7 @@ describe("Background Services Integration Tests", () => {
       vi.advanceTimersByTime(350)
 
       // 6. Verify idle callback was triggered
-      expect(idleStateChanges).toContain(true)
+      expect(idleStateChanges).toContain("idle")
 
       // 7. Update tracking state to reflect idle
       await storageManager.updateTrackingState({
@@ -321,7 +321,7 @@ describe("Background Services Integration Tests", () => {
       simulateIdleStateChange("active")
       vi.advanceTimersByTime(350)
 
-      expect(idleStateChanges).toContain(false)
+      expect(idleStateChanges).toContain("active")
     })
   })
 
@@ -390,9 +390,9 @@ describe("Background Services Integration Tests", () => {
 
       // 2. Start idle detector
       idleDetector.start({
-        onStateChange: (isIdle) => {
+        onStateChange: (state) => {
           stateChanges.push({
-            state: isIdle ? "idle" : "active",
+            state: state,
             timestamp: Date.now()
           })
         }
@@ -445,12 +445,12 @@ describe("Background Services Integration Tests", () => {
       expect(resumedState?.startTime).toBeDefined()
     })
 
-    it("should handle locked state as idle", async () => {
-      const idleStates: boolean[] = []
+    it("should handle locked state separately from idle", async () => {
+      const idleStates: string[] = []
 
       idleDetector.start({
-        onStateChange: (isIdle) => {
-          idleStates.push(isIdle)
+        onStateChange: (state) => {
+          idleStates.push(state)
         }
       })
 
@@ -458,14 +458,14 @@ describe("Background Services Integration Tests", () => {
       simulateIdleStateChange("locked")
       vi.advanceTimersByTime(350)
 
-      // Locked should be treated as idle
-      expect(idleStates).toContain(true)
+      // Locked should be passed as "locked"
+      expect(idleStates).toContain("locked")
 
       // Return to active
       simulateIdleStateChange("active")
       vi.advanceTimersByTime(350)
 
-      expect(idleStates).toContain(false)
+      expect(idleStates).toContain("active")
     })
   })
 
@@ -853,8 +853,8 @@ describe("Background Services Integration Tests", () => {
 
       const idleEvents: string[] = []
       idleDetector.start({
-        onStateChange: (isIdle) => {
-          idleEvents.push(isIdle ? "idle" : "active")
+        onStateChange: (state) => {
+          idleEvents.push(state)
         }
       })
 

@@ -6,7 +6,7 @@ const logger = new Logger("IdleDetector")
 export type IdleState = "active" | "idle" | "locked"
 
 export interface IdleDetectorCallbacks {
-  onStateChange: (isIdle: boolean) => void
+  onStateChange: (state: IdleState) => void
 }
 
 export class IdleDetector {
@@ -90,15 +90,10 @@ export class IdleDetector {
     }
 
     this.stateChangeDebounceTimer = setTimeout(() => {
-      const wasIdle =
-        this.currentState === "idle" || this.currentState === "locked"
-      const isNowIdle = newState === "idle" || newState === "locked"
-
-      if (wasIdle !== isNowIdle) {
+      // Only notify if state actually changed
+      if (this.currentState !== newState) {
         this.currentState = newState
-        this.callbacks?.onStateChange(isNowIdle)
-      } else {
-        this.currentState = newState
+        this.callbacks?.onStateChange(newState)
       }
 
       this.stateChangeDebounceTimer = undefined
